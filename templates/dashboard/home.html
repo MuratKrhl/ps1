@@ -1,0 +1,1511 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - Portall{% endblock %}
+
+{% block extra_css %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.dashboard-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">
+                        <i class="ri-dashboard-line me-2"></i>Dashboard
+                    </h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item active">Ana Sayfa</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- A. Üst Sıra Özet Kartları -->
+        <div class="row">
+            <!-- 1. Toplam Uygulama -->
+            <div class="col-xl-3 col-md-6">
+                <div class="card dashboard-card" data-url="{% url 'envanter:application_list' %}">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <p class="text-uppercase fw-medium text-muted mb-0">Toplam Uygulama</p>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
+                                        <i class="ri-apps-2-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-end justify-content-between mt-4">
+                            <div>
+                                <h4 class="fs-22 fw-semibold ff-secondary mb-2">
+                                    <span class="counter-value" data-target="{{ total_applications }}">{{ total_applications|default:0 }}</span>
+                                </h4>
+                                <span class="text-decoration-underline text-primary">Tüm Uygulamalar</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Aktif Uygulama -->
+            <div class="col-xl-3 col-md-6">
+                <div class="card dashboard-card" data-url="{% url 'envanter:application_list' %}?status=active">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <p class="text-uppercase fw-medium text-muted mb-0">Aktif Uygulama</p>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                                        <i class="ri-checkbox-circle-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-end justify-content-between mt-4">
+                            <div>
+                                <h4 class="fs-22 fw-semibold ff-secondary mb-2">
+                                    <span class="counter-value" data-target="{{ active_applications }}">{{ active_applications|default:0 }}</span>
+                                </h4>
+                                <span class="text-decoration-underline text-success">Çalışan Uygulamalar</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Sorunlu Uygulama -->
+            <div class="col-xl-3 col-md-6">
+                <div class="card dashboard-card" data-url="{% url 'envanter:application_list' %}?status=error">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <p class="text-uppercase fw-medium text-muted mb-0">Sorunlu Uygulama</p>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
+                                        <i class="ri-error-warning-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-end justify-content-between mt-4">
+                            <div>
+                                <h4 class="fs-22 fw-semibold ff-secondary mb-2 {% if error_applications > 0 %}text-danger{% endif %}">
+                                    <span class="counter-value" data-target="{{ error_applications }}">{{ error_applications|default:0 }}</span>
+                                </h4>
+                                <span class="text-decoration-underline {% if error_applications > 0 %}text-danger{% else %}text-muted{% endif %}">
+                                    {% if error_applications > 0 %}Dikkat Gerekli!{% else %}Sorun Yok{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Sertifikalar -->
+            <div class="col-xl-3 col-md-6">
+                <div class="card dashboard-card" data-url="{% url 'sertifikalar:dashboard' %}">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <p class="text-uppercase fw-medium text-muted mb-0">Sertifika Durumu</p>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
+                                        <i class="ri-key-2-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-end justify-content-between mt-4">
+                            <div>
+                                <h4 class="fs-22 fw-semibold ff-secondary mb-2">
+                                    <span class="counter-value" data-target="{{ certificates.total_certificates }}">{{ certificates.total_certificates|default:0 }}</span>
+                                </h4>
+                                {% if certificates.expired > 0 %}
+                                <span class="text-decoration-underline text-danger">{{ certificates.expired }} süresi dolmuş</span>
+                                {% elif certificates.expiring_7 > 0 %}
+                                <span class="text-decoration-underline text-danger">{{ certificates.expiring_7 }} kritik</span>
+                                {% elif certificates.expiring_30 > 0 %}
+                                <span class="text-decoration-underline text-warning">{{ certificates.expiring_30 }} yaklaşan</span>
+                                {% else %}
+                                <span class="text-decoration-underline text-success">Tümü geçerli</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- B. Orta Sıra: Performans ve Envanter Grafikleri -->
+        <div class="row">
+            <!-- B. Sol: Performans Grafiği -->
+            <div class="col-xl-8">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="card-title mb-0">
+                            <i class="ri-line-chart-line me-2"></i>Performans Grafiği
+                        </h4>
+                        <div class="flex-shrink-0">
+                            <button type="button" class="btn btn-soft-primary btn-sm" data-url="{% url 'performans:dashboard' %}">
+                                <i class="ri-external-link-line me-1"></i>Detaylar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                            <div id="performanceChartLoading" class="d-flex justify-content-center align-items-center" style="height: 300px;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Yükleniyor...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- B. Sağ: Envanter Sağlık Grafiği -->
+            <div class="col-xl-4">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="card-title mb-0">
+                            <i class="ri-pie-chart-line me-2"></i>Envanter Sağlığı
+                        </h4>
+                        <div class="flex-shrink-0">
+                            <button type="button" class="btn btn-soft-info btn-sm" data-url="{% url 'envanter:application_list' %}">
+                                <i class="ri-external-link-line me-1"></i>Envanter
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="inventoryChart"></canvas>
+                            <div id="inventoryChartLoading" class="d-flex justify-content-center align-items-center" style="height: 300px;">
+                                <div class="spinner-border text-info" role="status">
+                                    <span class="visually-hidden">Yükleniyor...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Envanter Özet Tablosu -->
+                        <div class="table-responsive mt-3">
+                            <table class="table table-borderless table-sm table-centered mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <i class="ri-checkbox-circle-fill text-success me-2"></i>
+                                            <span class="fw-medium">Aktif</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-success-subtle text-success">{{ active_applications|default:0 }}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <i class="ri-tools-fill text-warning me-2"></i>
+                                            <span class="fw-medium">Bakımda</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-warning-subtle text-warning">{{ maintenance_applications|default:0 }}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <i class="ri-error-warning-fill text-danger me-2"></i>
+                                            <span class="fw-medium">Sorunlu</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-danger-subtle text-danger">{{ error_applications|default:0 }}</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- C. Alt Sıra: Yaklaşan Sertifikalar -->
+        {% if certificates.available and certificates.recent_expiring %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="card-title mb-0">
+                            <i class="ri-key-2-line me-2"></i>Yaklaşan Sertifika Süreleri
+                        </h4>
+                        <div class="flex-shrink-0">
+                            <a href="{% url 'sertifikalar:dashboard' %}" class="btn btn-soft-warning btn-sm">
+                                <i class="ri-external-link-line me-1"></i>Sertifika Dashboard
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
+                                <thead class="text-muted table-light">
+                                    <tr>
+                                        <th scope="col">Sertifika</th>
+                                        <th scope="col">Sunucu</th>
+                                        <th scope="col">Uygulama</th>
+                                        <th scope="col">Son Kullanma</th>
+                                        <th scope="col">Kalan Gün</th>
+                                        <th scope="col">Durum</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cert in certificates.recent_expiring %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0 me-2">
+                                                    {% if cert.type == 'kdb' %}
+                                                    <div class="avatar-xs">
+                                                        <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-6">
+                                                            <i class="ri-key-line"></i>
+                                                        </span>
+                                                    </div>
+                                                    {% else %}
+                                                    <div class="avatar-xs">
+                                                        <span class="avatar-title bg-success-subtle text-success rounded-circle fs-6">
+                                                            <i class="ri-code-line"></i>
+                                                        </span>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="fs-14 mb-0">
+                                                        {% if cert.type == 'kdb' %}
+                                                        <a href="{% url 'sertifikalar:kdb_detail' cert.id %}" class="text-dark">
+                                                        {% else %}
+                                                        <a href="{% url 'sertifikalar:java_detail' cert.id %}" class="text-dark">
+                                                        {% endif %}
+                                                            {{ cert.common_name|truncatechars:30 }}
+                                                        </a>
+                                                    </h6>
+                                                    <p class="text-muted mb-0 fs-12">
+                                                        {% if cert.type == 'kdb' %}
+                                                        <span class="badge bg-primary-subtle text-primary">KDB</span>
+                                                        {% else %}
+                                                        <span class="badge bg-success-subtle text-success">Java</span>
+                                                        {% endif %}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ cert.server_hostname|truncatechars:20 }}</td>
+                                        <td>{{ cert.application_name|default:"-"|truncatechars:20 }}</td>
+                                        <td>{{ cert.valid_to|date:"d.m.Y" }}</td>
+                                        <td>
+                                            <span class="fw-medium">{{ cert.days_left }} gün</span>
+                                        </td>
+                                        <td>
+                                            {% if cert.days_left <= 0 %}
+                                            <span class="badge bg-danger-subtle text-danger">Süresi Dolmuş</span>
+                                            {% elif cert.days_left <= 7 %}
+                                            <span class="badge bg-danger-subtle text-danger">Kritik</span>
+                                            {% elif cert.days_left <= 30 %}
+                                            <span class="badge bg-warning-subtle text-warning">Yaklaşan</span>
+                                            {% else %}
+                                            <span class="badge bg-success-subtle text-success">Geçerli</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- C2. Nöbet Listesi Widget'ı -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card" id="duty-schedule-widget">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="card-title mb-0">
+                            <i class="ri-calendar-check-line me-2"></i>Nöbet Listesi
+                        </h4>
+                        <a href="{% url 'nobetci:nobetci_list' %}" class="btn btn-sm btn-soft-primary">
+                            <i class="ri-external-link-line me-1"></i>Tümünü Gör
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="duty-cards">
+                            <!-- Bugünkü Nöbetçi -->
+                            <div class="col-md-6">
+                                <div class="card border border-primary mb-0" id="current-duty-card">
+                                    <div class="card-body text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Yükleniyor...</span>
+                                        </div>
+                                        <p class="mt-2 mb-0">Bugünkü nöbetçi yükleniyor...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Sonraki Nöbetçi -->
+                            <div class="col-md-6">
+                                <div class="card border border-success mb-0" id="next-duty-card">
+                                    <div class="card-body text-center">
+                                        <div class="spinner-border text-success" role="status">
+                                            <span class="visually-hidden">Yükleniyor...</span>
+                                        </div>
+                                        <p class="mt-2 mb-0">Sonraki nöbetçi yükleniyor...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Gelecek Hafta Nöbetçileri -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h6 class="mb-3">Gelecek Hafta Nöbetçileri</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-borderless table-sm mb-0" id="upcoming-duties-table">
+                                        <tbody>
+                                            <tr>
+                                                <td colspan="3" class="text-center">
+                                                    <div class="spinner-border spinner-border-sm" role="status">
+                                                        <span class="visually-hidden">Yükleniyor...</span>
+                                                    </div>
+                                                    <span class="ms-2">Gelecek nöbetler yükleniyor...</span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- C3. Ansible İstatistikleri Widget'ı -->
+        {% if ansible.available %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="card-title mb-0">
+                            <i class="ri-terminal-line me-2"></i>Ansible Otomasyon
+                        </h4>
+                        <div class="flex-shrink-0">
+                            <a href="{% url 'otomasyon:ansible_job_templates' %}" class="btn btn-soft-primary btn-sm">
+                                <i class="ri-eye-line me-1"></i>Tümünü Gör
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Üst sıra: İstatistik kartları -->
+                        <div class="row mb-3">
+                            <div class="col-xl-3 col-md-6">
+                                <div class="card bg-primary-subtle border-0 mb-0">
+                                    <div class="card-body text-center">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <div class="flex-shrink-0">
+                                                <i class="ri-file-list-3-line text-primary" style="font-size: 2rem;"></i>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <h4 class="mb-1 text-primary">{{ ansible.total_templates|default:0 }}</h4>
+                                                <p class="text-muted mb-0">Job Template</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6">
+                                <div class="card bg-success-subtle border-0 mb-0">
+                                    <div class="card-body text-center">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <div class="flex-shrink-0">
+                                                <i class="ri-play-circle-line text-success" style="font-size: 2rem;"></i>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <h4 class="mb-1 text-success">{{ ansible.total_executions|default:0 }}</h4>
+                                                <p class="text-muted mb-0">Toplam Çalıştırma</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6">
+                                <div class="card bg-info-subtle border-0 mb-0">
+                                    <div class="card-body text-center">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <div class="flex-shrink-0">
+                                                <i class="ri-check-double-line text-info" style="font-size: 2rem;"></i>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <h4 class="mb-1 text-info">{{ ansible.success_rate|default:0 }}%</h4>
+                                                <p class="text-muted mb-0">Başarı Oranı</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6">
+                                <div class="card bg-warning-subtle border-0 mb-0">
+                                    <div class="card-body text-center">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <div class="flex-shrink-0">
+                                                <i class="ri-loader-line text-warning" style="font-size: 2rem;"></i>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <h4 class="mb-1 text-warning">{{ ansible.running_jobs|default:0 }}</h4>
+                                                <p class="text-muted mb-0">Çalışan Job</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Alt sıra: Son job'lar tablosu -->
+                        {% if ansible.recent_executions %}
+                        <div class="table-responsive">
+                            <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
+                                <thead class="text-muted table-light">
+                                    <tr>
+                                        <th scope="col">Job Template</th>
+                                        <th scope="col">Kullanıcı</th>
+                                        <th scope="col">Durum</th>
+                                        <th scope="col">Başlangıç</th>
+                                        <th scope="col">Süre</th>
+                                        <th scope="col">İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for execution in ansible.recent_executions %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0">
+                                                    <i class="ri-file-list-3-line text-muted"></i>
+                                                </div>
+                                                <div class="flex-grow-1 ms-2">
+                                                    <h6 class="mb-0">{{ execution.job_template_name|truncatechars:30 }}</h6>
+                                                    <small class="text-muted">ID: {{ execution.tower_job_id }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark">{{ execution.launched_by }}</span>
+                                        </td>
+                                        <td>
+                                            {% if execution.status == 'successful' %}
+                                                <span class="badge bg-success-subtle text-success">
+                                                    <i class="ri-check-line me-1"></i>Başarılı
+                                                </span>
+                                            {% elif execution.status == 'failed' %}
+                                                <span class="badge bg-danger-subtle text-danger">
+                                                    <i class="ri-close-line me-1"></i>Başarısız
+                                                </span>
+                                            {% elif execution.status == 'running' %}
+                                                <span class="badge bg-warning-subtle text-warning">
+                                                    <i class="ri-loader-line me-1"></i>Çalışıyor
+                                                </span>
+                                            {% elif execution.status == 'pending' %}
+                                                <span class="badge bg-info-subtle text-info">
+                                                    <i class="ri-time-line me-1"></i>Bekliyor
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary-subtle text-secondary">
+                                                    <i class="ri-question-line me-1"></i>{{ execution.status|title }}
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ execution.started_at|date:"d.m.Y H:i" }}</small>
+                                        </td>
+                                        <td>
+                                            {% if execution.duration %}
+                                                <small class="text-muted">{{ execution.duration }}</small>
+                                            {% else %}
+                                                <small class="text-muted">-</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <a href="#" class="dropdown-toggle btn btn-sm btn-soft-secondary" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="ri-more-2-fill"></i>
+                                                </a>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <a class="dropdown-item" href="{% url 'otomasyon:ansible_job_execution_detail' execution.id %}">
+                                                            <i class="ri-eye-line me-2"></i>Detaylar
+                                                        </a>
+                                                    </li>
+                                                    {% if execution.status == 'running' %}
+                                                    <li>
+                                                        <a class="dropdown-item text-warning" href="#" onclick="cancelJob({{ execution.id }})">
+                                                            <i class="ri-stop-line me-2"></i>İptal Et
+                                                        </a>
+                                                    </li>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="ri-file-list-3-line text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3 text-muted">Henüz job çalıştırılmamış</h5>
+                            <p class="text-muted">İlk Ansible job'ınızı çalıştırmak için Job Templates sayfasını ziyaret edin.</p>
+                            <a href="{% url 'otomasyon:ansible_job_templates' %}" class="btn btn-primary">
+                                <i class="ri-play-line me-1"></i>Job Templates
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- D. Alt Sıra: Son Duyurular ve AskGT Makaleleri -->
+        <div class="row">
+            <!-- D. Sol: Son Duyurular -->
+            <div class="col-xl-6">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="card-title mb-0">
+                            <i class="ri-notification-line me-2"></i>Son Duyurular
+                            <span class="badge bg-info-subtle text-info ms-2" id="announcement-count">0</span>
+                        </h4>
+                        <div class="flex-shrink-0">
+                            <a href="/duyurular/" class="btn btn-soft-info btn-sm">
+                                <i class="ri-external-link-line me-1"></i>Tümünü Gör
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="announcements-loading" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Yüklüyor...</span>
+                            </div>
+                            <p class="text-muted mt-2 mb-0">Duyurular yüklüyor...</p>
+                        </div>
+                        <div id="announcements-content" class="d-none">
+                            <div class="table-responsive">
+                                <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
+                                    <tbody id="announcements-list">
+                                        <!-- Duyurular buraya yüklenecek -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div id="announcements-empty" class="text-center text-muted py-4 d-none">
+                            <i class="ri-notification-off-line fs-1 text-muted mb-2"></i>
+                            <p class="mb-0">Henüz duyuru bulunmuyor</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- C. Sağ: Son AskGT Makaleleri -->
+            <div class="col-xl-6">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="card-title mb-0">
+                            <i class="ri-article-line me-2"></i>Son AskGT Makaleleri
+                        </h4>
+                        <div class="flex-shrink-0">
+                            <a href="{% url 'askgt:article_list' %}" class="btn btn-soft-success btn-sm">
+                                <i class="ri-external-link-line me-1"></i>Tümünü Gör
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
+                                <thead class="text-muted table-light">
+                                    <tr>
+                                        <th scope="col">Başlık</th>
+                                        <th scope="col">Kategori</th>
+                                        <th scope="col">Tarih</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for article in recent_articles %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'askgt:article_detail' article.id %}" class="fw-medium link-primary">
+                                                {{ article.title|truncatechars:40 }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success-subtle text-success">
+                                                {{ article.category.name|default:"Genel" }}
+                                            </span>
+                                        </td>
+                                        <td>{{ article.created_at|date:"d.m.Y" }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted py-4">
+                                            <i class="ri-article-line fs-1 text-muted mb-2"></i>
+                                            <p class="mb-0">Henüz makale bulunmuyor</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Aktif Duyuru</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <h5 class="text-success fs-14 mb-0">
+                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i> +29.08 %
+                        </h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value" data-target="{{ stats.active_announcements }}">{{ stats.active_announcements }}</span></h4>
+                        <a href="/duyurular/" class="text-decoration-underline">Duyuruları Gör</a>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-warning-subtle rounded fs-3">
+                            <i class="bx bx-bell text-warning"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Nöbetçi Sayısı</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <h5 class="text-muted fs-14 mb-0">
+                            +0.00 %
+                        </h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value" data-target="{{ stats.on_duty_count }}">{{ stats.on_duty_count }}</span></h4>
+                        <a href="/nobetci/" class="text-decoration-underline">Nöbet Listesi</a>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-primary-subtle rounded fs-3">
+                            <i class="bx bx-user-check text-primary"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Hızlı Erişim</h4>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {% for link in quick_links %}
+                    <div class="col-xxl-3 col-sm-6">
+                        <div class="card profile-project-card shadow-none profile-project-success">
+                            <div class="card-body p-4">
+                                <div class="d-flex">
+                                    <div class="flex-grow-1 text-muted overflow-hidden">
+                                        <h5 class="fs-14 text-truncate"><a href="{{ link.url }}" class="text-dark">{{ link.title }}</a></h5>
+                                        <p class="text-muted text-truncate mb-0">{{ link.description }}</p>
+                                    </div>
+                                    <div class="flex-shrink-0 ms-2">
+                                        <div class="badge badge-soft-success fs-10">Aktif</div>
+                                    </div>
+                                </div>
+                                <div class="d-flex mt-4">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div>
+                                                <h5 class="fs-12 text-muted mb-0">Erişim:</h5>
+                                            </div>
+                                            <div class="avatar-group">
+                                                <div class="avatar-group-item">
+                                                    <div class="avatar-xs">
+                                                        <i class="{{ link.icon }} fs-16"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="card card-height-100">
+            <div class="card-header align-items-center d-flex">
+                <h4 class="card-title mb-0 flex-grow-1">Son Aktiviteler</h4>
+                <div class="flex-shrink-0">
+                    <button type="button" class="btn btn-soft-primary btn-sm">
+                        <i class="ri-file-list-3-line align-middle"></i> Tümünü Gör
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div data-simplebar style="max-height: 350px;" class="px-3 mx-n3">
+                    {% if recent_activities %}
+                        {% for activity in recent_activities %}
+                        <div class="d-flex mb-4">
+                            <div class="flex-shrink-0">
+                                <img src="{% static 'images/users/avatar-2.jpg' %}" alt="" class="avatar-xs rounded-circle" />
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1 lh-base">{{ activity.title }}</h6>
+                                <p class="text-muted fs-13 mb-1">{{ activity.description }}</p>
+                                <small class="mb-0 text-muted">{{ activity.created_at|timesince }} önce</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="text-center">
+                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:72px;height:72px">
+                        </lord-icon>
+                        <h5 class="mt-4">Henüz aktivite yok</h5>
+                        <p class="text-muted">Portal kullanımınız başladığında burada aktivitelerinizi görebileceksiniz.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Sistem Durumu</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs me-3 flex-shrink-0">
+                                            <span class="avatar-title bg-success-subtle text-success rounded-circle fs-16">
+                                                <i class="ri-checkbox-circle-fill"></i>
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <h5 class="fs-14 my-1">Web Servisleri</h5>
+                                            <span class="text-muted">Tüm servisler çalışıyor</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <h5 class="fs-14 my-1 fw-normal">99.9%</h5>
+                                    <span class="text-muted">Uptime</span>
+                                </td>
+                                <td>
+                                    <div class="badge badge-soft-success">Aktif</div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs me-3 flex-shrink-0">
+                                            <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-16">
+                                                <i class="ri-error-warning-fill"></i>
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <h5 class="fs-14 my-1">Veritabanı</h5>
+                                            <span class="text-muted">Yavaş yanıt süreleri</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <h5 class="fs-14 my-1 fw-normal">87.2%</h5>
+                                    <span class="text-muted">Performance</span>
+                                </td>
+                                <td>
+                                    <div class="badge badge-soft-warning">Uyarı</div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs me-3 flex-shrink-0">
+                                            <span class="avatar-title bg-success-subtle text-success rounded-circle fs-16">
+                                                <i class="ri-checkbox-circle-fill"></i>
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <h5 class="fs-14 my-1">API Gateway</h5>
+                                            <span class="text-muted">Normal işlem</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <h5 class="fs-14 my-1 fw-normal">98.1%</h5>
+                                    <span class="text-muted">Uptime</span>
+                                </td>
+                                <td>
+                                    <div class="badge badge-soft-success">Aktif</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Son Duyurular</h4>
+            </div>
+            <div class="card-body">
+                <div class="px-3 mx-n3" data-simplebar style="max-height: 316px;">
+                    <div class="vstack gap-3">
+                        <div class="p-2 border border-dashed border-start-0 border-end-0">
+                            <div class="d-flex">
+                                <div class="avatar-sm flex-shrink-0 me-3">
+                                    <div class="avatar-title bg-soft-danger text-danger rounded fs-18">
+                                        <i class="ri-error-warning-fill"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 lh-base">Sistem Bakımı Duyurusu</h6>
+                                    <p class="text-muted fs-13 mb-0">15 Ağustos Pazar günü 02:00-06:00 arası planlı bakım yapılacaktır.</p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <span class="text-muted fs-12">2 gün önce</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-2 border border-dashed border-start-0 border-end-0">
+                            <div class="d-flex">
+                                <div class="avatar-sm flex-shrink-0 me-3">
+                                    <div class="avatar-title bg-soft-info text-info rounded fs-18">
+                                        <i class="ri-information-fill"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 lh-base">Yeni Özellik: Global Arama</h6>
+                                    <p class="text-muted fs-13 mb-0">Artık tüm portal içeriğinde arama yapabilirsiniz.</p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <span class="text-muted fs-12">1 hafta önce</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-2 border border-dashed border-start-0 border-end-0">
+                            <div class="d-flex">
+                                <div class="avatar-sm flex-shrink-0 me-3">
+                                    <div class="avatar-title bg-soft-success text-success rounded fs-18">
+                                        <i class="ri-checkbox-circle-fill"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 lh-base">Performans İyileştirmesi</h6>
+                                    <p class="text-muted fs-13 mb-0">Portal hızında %40 iyileştirme sağlandı.</p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <span class="text-muted fs-12">2 hafta önce</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Dashboard card click handlers
+    document.querySelectorAll('.dashboard-card[data-url]').forEach(card => {
+        card.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            if (url) {
+                window.location.href = url;
+            }
+        });
+    });
+
+    // Button click handlers
+    document.querySelectorAll('button[data-url]').forEach(button => {
+        button.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            if (url) {
+                window.location.href = url;
+            }
+        });
+    });
+
+    // Counter Animation
+    const counters = document.querySelectorAll('.counter-value');
+    counters.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-target'));
+        const increment = target / 200;
+        let current = 0;
+        
+        const updateCounter = () => {
+            if (current < target) {
+                current += increment;
+                counter.textContent = Math.ceil(current);
+                setTimeout(updateCounter, 10);
+            } else {
+                counter.textContent = target;
+            }
+        };
+        
+        updateCounter();
+    });
+
+    // Load Performance Chart
+    loadPerformanceChart();
+    
+    // Load Inventory Chart
+    loadInventoryChart();
+});
+
+function loadPerformanceChart() {
+    fetch('/dashboard/api/performance-chart/')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            document.getElementById('performanceChartLoading').style.display = 'none';
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Yanıt Süresi (ms)',
+                        data: data.values,
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Performans grafiği yüklenirken hata:', error);
+            document.getElementById('performanceChartLoading').innerHTML = 
+                '<div class="text-center text-muted"><i class="ri-error-warning-line fs-1 mb-2"></i><p>Grafik yüklenemedi</p></div>';
+        });
+}
+
+function loadInventoryChart() {
+    fetch('/dashboard/api/inventory-chart/')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('inventoryChart').getContext('2d');
+            document.getElementById('inventoryChartLoading').style.display = 'none';
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.values,
+                        backgroundColor: [
+                            '#10b981', // success - aktif
+                            '#f59e0b', // warning - bakımda  
+                            '#ef4444'  // danger - sorunlu
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Envanter grafiği yüklenirken hata:', error);
+            document.getElementById('inventoryChartLoading').innerHTML = 
+                '<div class="text-center text-muted"><i class="ri-error-warning-line fs-1 mb-2"></i><p>Grafik yüklenemedi</p></div>';
+        });
+}
+
+function loadAnnouncements() {
+    fetch('/dashboard/api/data/')
+        .then(response => response.json())
+        .then(data => {
+            const announcements = data.announcements;
+            
+            if (announcements && announcements.available) {
+                // Update announcement count
+                document.getElementById('announcement-count').textContent = announcements.published;
+                
+                const announcementsList = document.getElementById('announcements-list');
+                const loadingDiv = document.getElementById('announcements-loading');
+                const contentDiv = document.getElementById('announcements-content');
+                const emptyDiv = document.getElementById('announcements-empty');
+                
+                if (announcements.recent && announcements.recent.length > 0) {
+                    // Build announcements HTML
+                    let html = '';
+                    announcements.recent.forEach(announcement => {
+                        const publishedDate = new Date(announcement.published_at).toLocaleDateString('tr-TR');
+                        const priorityBadge = announcement.is_important ? 
+                            `<span class="badge bg-danger-subtle text-danger ms-1"><i class="ri-star-fill"></i></span>` : '';
+                        const pinnedIcon = announcement.is_pinned ? 
+                            `<i class="ri-pushpin-fill text-warning me-1"></i>` : '';
+                        
+                        html += `
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-grow-1">
+                                            <h6 class="fs-14 mb-1">
+                                                ${pinnedIcon}
+                                                <a href="${announcement.url}" class="text-dark">
+                                                    ${announcement.title.length > 45 ? announcement.title.substring(0, 45) + '...' : announcement.title}
+                                                </a>
+                                                ${priorityBadge}
+                                            </h6>
+                                            <p class="text-muted mb-0 fs-12">
+                                                <span class="badge ${announcement.type_class}">${announcement.type}</span>
+                                                <span class="badge ${announcement.priority_class} ms-1">${announcement.priority}</span>
+                                            </p>
+                                        </div>
+                                        <div class="flex-shrink-0 text-end">
+                                            <p class="text-muted mb-0 fs-12">${publishedDate}</p>
+                                            <p class="text-muted mb-0 fs-11">
+                                                <i class="ri-eye-line me-1"></i>${announcement.view_count}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    announcementsList.innerHTML = html;
+                    loadingDiv.classList.add('d-none');
+                    contentDiv.classList.remove('d-none');
+                    emptyDiv.classList.add('d-none');
+                } else {
+                    // No announcements
+                    loadingDiv.classList.add('d-none');
+                    contentDiv.classList.add('d-none');
+                    emptyDiv.classList.remove('d-none');
+                }
+            } else {
+                // Error loading announcements
+                document.getElementById('announcements-loading').innerHTML = 
+                    '<div class="text-center text-muted"><i class="ri-error-warning-line fs-1 mb-2"></i><p>Duyurular yüklenemedi</p></div>';
+            }
+        })
+        .catch(error => {
+            console.error('Duyurular yüklenirken hata:', error);
+            document.getElementById('announcements-loading').innerHTML = 
+                '<div class="text-center text-muted"><i class="ri-error-warning-line fs-1 mb-2"></i><p>Duyurular yüklenemedi</p></div>';
+        });
+}
+
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    loadPerformanceChart();
+    loadInventoryChart();
+    loadAnnouncements();
+    loadDutySchedule();
+});
+
+// Load Duty Schedule Widget
+function loadDutySchedule() {
+    // Dashboard API'den nöbet verilerini al
+    fetch('{% url "dashboard:api_data" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.duty_schedule && data.duty_schedule.available) {
+                updateCurrentDutyCard(data.duty_schedule.current_duty);
+                updateNextDutyCard(data.duty_schedule.next_duty);
+                updateUpcomingDutiesTable(data.duty_schedule.upcoming_duties);
+            } else {
+                showDutyError('Nöbet listesi verileri alınamadı');
+            }
+        })
+        .catch(error => {
+            console.error('Duty schedule loading error:', error);
+            showDutyError('Veri yükleme hatası');
+        });
+}
+
+// Update Current Duty Card
+function updateCurrentDutyCard(currentDuty) {
+    const card = document.getElementById('current-duty-card');
+    
+    if (currentDuty && currentDuty.exists) {
+        card.innerHTML = `
+            <div class="card-body text-center">
+                <div class="avatar-md mx-auto mb-3">
+                    <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
+                        <i class="ri-user-line"></i>
+                    </span>
+                </div>
+                <h5 class="mb-1">${currentDuty.ad_soyad}</h5>
+                <p class="text-muted mb-2">Bugünkü Nöbetçi</p>
+                <div class="d-flex justify-content-center gap-2">
+                    ${currentDuty.telefon ? `<a href="tel:${currentDuty.telefon}" class="btn btn-sm btn-primary"><i class="ri-phone-line me-1"></i>Ara</a>` : ''}
+                    ${currentDuty.email ? `<a href="mailto:${currentDuty.email}" class="btn btn-sm btn-outline-primary"><i class="ri-mail-line me-1"></i>Mail</a>` : ''}
+                </div>
+                <div class="mt-2">
+                    <span class="badge bg-success-subtle text-success">
+                        <i class="ri-time-line me-1"></i>Aktif
+                    </span>
+                </div>
+            </div>
+        `;
+    } else {
+        card.innerHTML = `
+            <div class="card-body text-center">
+                <div class="avatar-md mx-auto mb-3">
+                    <span class="avatar-title bg-light text-muted rounded-circle fs-3">
+                        <i class="ri-user-unfollow-line"></i>
+                    </span>
+                </div>
+                <h6 class="text-muted mb-1">Bugün Nöbetçi Yok</h6>
+                <p class="text-muted mb-0 fs-12">Nöbet listesi güncel değil</p>
+            </div>
+        `;
+    }
+}
+
+// Update Next Duty Card
+function updateNextDutyCard(nextDuty) {
+    const card = document.getElementById('next-duty-card');
+    
+    if (nextDuty && nextDuty.exists) {
+        card.innerHTML = `
+            <div class="card-body text-center">
+                <div class="avatar-md mx-auto mb-3">
+                    <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                        <i class="ri-calendar-check-line"></i>
+                    </span>
+                </div>
+                <h5 class="mb-1">${nextDuty.ad_soyad}</h5>
+                <p class="text-muted mb-2">${nextDuty.tarih}</p>
+                <div class="mt-2">
+                    <span class="badge bg-info-subtle text-info">
+                        <i class="ri-time-line me-1"></i>${nextDuty.days_until} gün sonra
+                    </span>
+                </div>
+            </div>
+        `;
+    } else {
+        card.innerHTML = `
+            <div class="card-body text-center">
+                <div class="avatar-md mx-auto mb-3">
+                    <span class="avatar-title bg-light text-muted rounded-circle fs-3">
+                        <i class="ri-calendar-line"></i>
+                    </span>
+                </div>
+                <h6 class="text-muted mb-1">Sonraki Nöbet Yok</h6>
+                <p class="text-muted mb-0 fs-12">Nöbet listesi güncel değil</p>
+            </div>
+        `;
+    }
+}
+
+// Update Upcoming Duties Table
+function updateUpcomingDutiesTable(upcomingDuties) {
+    const tableBody = document.querySelector('#upcoming-duties-table tbody');
+    
+    if (upcomingDuties && upcomingDuties.length > 0) {
+        let rows = '';
+        upcomingDuties.forEach(duty => {
+            const dutyDate = new Date(duty.tarih);
+            const formattedDate = dutyDate.toLocaleDateString('tr-TR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+            const dayName = dutyDate.toLocaleDateString('tr-TR', { weekday: 'long' });
+            
+            rows += `
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-xs me-2">
+                                <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-6">
+                                    ${duty.ad_soyad.charAt(0).toUpperCase()}
+                                </span>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fs-14">${duty.ad_soyad}</h6>
+                                <p class="text-muted mb-0 fs-12">${duty.telefon || 'Telefon yok'}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="fw-medium">${formattedDate}</span><br>
+                        <small class="text-muted">${dayName}</small>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            ${duty.telefon ? `<a href="tel:${duty.telefon}" class="btn btn-xs btn-soft-primary" title="Ara"><i class="ri-phone-line"></i></a>` : ''}
+                            ${duty.email ? `<a href="mailto:${duty.email}" class="btn btn-xs btn-soft-success" title="Mail"><i class="ri-mail-line"></i></a>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        tableBody.innerHTML = rows;
+    } else {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="3" class="text-center text-muted py-3">
+                    <i class="ri-calendar-line fs-4 d-block mb-1"></i>
+                    Gelecek hafta nöbet kaydı bulunamadı
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Show Duty Error
+function showDutyError(message) {
+    const widget = document.getElementById('duty-schedule-widget');
+    const cardBody = widget.querySelector('.card-body');
+    
+    cardBody.innerHTML = `
+        <div class="text-center py-4">
+            <div class="avatar-lg mx-auto mb-3">
+                <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-2">
+                    <i class="ri-error-warning-line"></i>
+                </span>
+            </div>
+            <h6 class="text-danger mb-1">Veri Yükleme Hatası</h6>
+            <p class="text-muted mb-3">${message}</p>
+            <button class="btn btn-sm btn-outline-primary" onclick="loadDutySchedule()">
+                <i class="ri-refresh-line me-1"></i>Tekrar Dene
+            </button>
+        </div>
+    `;
+}
+
+// Ansible Widget Functions
+function cancelJob(executionId) {
+    if (!confirm('Bu job iptal etmek istediginizden emin misiniz?')) {
+        return;
+    }
+    
+    fetch(`/otomasyon/ansible/executions/${executionId}/cancel/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            showToast('Job basariyla iptal edildi', 'success');
+            // Refresh the page after a short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showToast(data.error || 'Job iptal edilirken hata olustu', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Job iptal edilirken hata olustu', 'error');
+    });
+}
+
+function refreshAnsibleStatus() {
+    const ansibleWidget = document.querySelector('.ansible-widget');
+    if (!ansibleWidget) return;
+    
+    // Add loading indicator
+    const refreshBtn = document.querySelector('.ansible-refresh-btn');
+    if (refreshBtn) {
+        refreshBtn.innerHTML = '<i class="ri-loader-4-line spin me-1"></i>Yenileniyor...';
+        refreshBtn.disabled = true;
+    }
+    
+    fetch('/dashboard/api/ansible-status/')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateAnsibleWidget(data.ansible);
+            showToast('Ansible durumu guncellendi', 'success');
+        } else {
+            showToast('Durum guncellenirken hata olustu', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Durum guncellenirken hata olustu', 'error');
+    })
+    .finally(() => {
+        if (refreshBtn) {
+            refreshBtn.innerHTML = '<i class="ri-refresh-line me-1"></i>Yenile';
+            refreshBtn.disabled = false;
+        }
+    });
+}
+
+function updateAnsibleWidget(ansibleData) {
+    // Update statistics cards
+    const totalTemplates = document.querySelector('.ansible-total-templates');
+    const totalExecutions = document.querySelector('.ansible-total-executions');
+    const successRate = document.querySelector('.ansible-success-rate');
+    const runningJobs = document.querySelector('.ansible-running-jobs');
+    
+    if (totalTemplates) totalTemplates.textContent = ansibleData.total_templates || 0;
+    if (totalExecutions) totalExecutions.textContent = ansibleData.total_executions || 0;
+    if (successRate) successRate.textContent = (ansibleData.success_rate || 0) + '%';
+    if (runningJobs) runningJobs.textContent = ansibleData.running_jobs || 0;
+    
+    // Update recent executions table if needed
+    // This would require more complex DOM manipulation
+    // For now, we'll just refresh the page if there are significant changes
+}
+
+function showToast(message, type = 'info') {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 3000);
+}
+
+// Helper function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

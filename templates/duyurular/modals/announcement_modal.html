@@ -1,0 +1,420 @@
+<!-- Announcement Modal -->
+<div class="modal fade" id="announcementModal" tabindex="-1" aria-labelledby="announcementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="announcementModalLabel">
+                    <i class="ri-notification-line me-2"></i>
+                    <span id="modalTitle">Yeni Duyuru</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form id="announcementForm" method="post">
+                {% csrf_token %}
+                <input type="hidden" id="announcementId" name="id" value="">
+                <input type="hidden" id="formAction" name="action" value="draft">
+                
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Left Column -->
+                        <div class="col-lg-8">
+                            <!-- Basic Information -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">
+                                        <i class="ri-information-line me-2"></i>Temel Bilgiler
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label for="title" class="form-label">Başlık <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="title" name="title" required 
+                                                   placeholder="Duyuru başlığını girin...">
+                                            <div class="invalid-feedback">
+                                                Başlık alanı zorunludur.
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <label for="category" class="form-label">Kategori</label>
+                                            <select class="form-select" id="category" name="category">
+                                                <option value="">Kategori Seçin</option>
+                                                <!-- Categories will be loaded dynamically -->
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <label for="duyuru_tipi" class="form-label">Duyuru Türü <span class="text-danger">*</span></label>
+                                            <select class="form-select" id="duyuru_tipi" name="duyuru_tipi" required>
+                                                <option value="">Tür Seçin</option>
+                                                <option value="general">Genel</option>
+                                                <option value="planned_work">Planlı Çalışma</option>
+                                                <option value="maintenance">Bakım</option>
+                                                <option value="outage">Kesinti</option>
+                                                <option value="update">Güncelleme</option>
+                                                <option value="info">Bilgilendirme</option>
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Duyuru türü seçimi zorunludur.
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <label for="onem_seviyesi" class="form-label">Önem Seviyesi <span class="text-danger">*</span></label>
+                                            <select class="form-select" id="onem_seviyesi" name="onem_seviyesi" required>
+                                                <option value="">Seviye Seçin</option>
+                                                <option value="low">Düşük</option>
+                                                <option value="normal" selected>Normal</option>
+                                                <option value="high">Yüksek</option>
+                                                <option value="critical">Kritik</option>
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Önem seviyesi seçimi zorunludur.
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <label for="ilgili_urun" class="form-label">İlgili Ürün/Sistem</label>
+                                            <input type="text" class="form-control" id="ilgili_urun" name="ilgili_urun" 
+                                                   placeholder="Örn: WebSphere, Oracle DB, Apache...">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Content -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">
+                                        <i class="ri-file-text-line me-2"></i>İçerik
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <label for="content" class="form-label">Duyuru İçeriği <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="content" name="content" rows="10" required
+                                              placeholder="Duyuru içeriğini buraya yazın..."></textarea>
+                                    <div class="invalid-feedback">
+                                        İçerik alanı zorunludur.
+                                    </div>
+                                    <div class="form-text">
+                                        <i class="ri-information-line me-1"></i>
+                                        Zengin metin editörü kullanarak biçimlendirme yapabilirsiniz.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column -->
+                        <div class="col-lg-4">
+                            <!-- Settings -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">
+                                        <i class="ri-settings-3-line me-2"></i>Ayarlar
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="sabitle" name="sabitle">
+                                        <label class="form-check-label" for="sabitle">
+                                            <i class="ri-pushpin-line me-1"></i>Duyuruyu Sabitle
+                                        </label>
+                                        <div class="form-text">Sabitlenmiş duyurular listenin en üstünde görünür.</div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="yayin_bitis_tarihi" class="form-label">Yayın Bitiş Tarihi</label>
+                                        <input type="datetime-local" class="form-control" id="yayin_bitis_tarihi" 
+                                               name="yayin_bitis_tarihi">
+                                        <div class="form-text">
+                                            Bu tarihte duyuru otomatik olarak arşivlenir. Boş bırakılırsa süresiz yayında kalır.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Planned Work Details -->
+                            <div class="card mb-3" id="plannedWorkCard" style="display: none;">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">
+                                        <i class="ri-calendar-event-line me-2"></i>Planlı Çalışma Detayları
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="calisma_tarihi" class="form-label">Çalışma Tarihi</label>
+                                        <input type="datetime-local" class="form-control" id="calisma_tarihi" 
+                                               name="calisma_tarihi">
+                                        <div class="form-text">
+                                            Planlı çalışmanın gerçekleştirileceği tarih ve saat.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Preview -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">
+                                        <i class="ri-eye-line me-2"></i>Önizleme
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="announcementPreview" class="border rounded p-3 bg-light">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <h6 class="mb-0" id="previewTitle">Başlık buraya gelecek</h6>
+                                            <span id="previewPinned" class="ms-2" style="display: none;">
+                                                <i class="ri-pushpin-fill text-warning"></i>
+                                            </span>
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-1 mb-2">
+                                            <span id="previewType" class="badge bg-primary">Tür</span>
+                                            <span id="previewPriority" class="badge bg-secondary">Öncelik</span>
+                                        </div>
+                                        <p id="previewContent" class="text-muted mb-0 small">
+                                            İçerik önizlemesi buraya gelecek...
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <div class="d-flex justify-content-between w-100">
+                        <div>
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                                <i class="ri-close-line me-1"></i>İptal
+                            </button>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-secondary me-2" id="saveDraftBtn">
+                                <i class="ri-draft-line me-1"></i>Taslak Kaydet
+                            </button>
+                            <button type="button" class="btn btn-primary" id="publishBtn">
+                                <i class="ri-send-plane-line me-1"></i>Yayınla
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('announcementModal');
+    const form = document.getElementById('announcementForm');
+    const duyuruTipiSelect = document.getElementById('duyuru_tipi');
+    const plannedWorkCard = document.getElementById('plannedWorkCard');
+    const saveDraftBtn = document.getElementById('saveDraftBtn');
+    const publishBtn = document.getElementById('publishBtn');
+    const formAction = document.getElementById('formAction');
+    
+    // Initialize CKEditor
+    let contentEditor;
+    if (typeof CKEDITOR !== 'undefined') {
+        CKEDITOR.replace('content', {
+            height: 300,
+            toolbar: [
+                { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike'] },
+                { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Blockquote'] },
+                { name: 'links', items: ['Link', 'Unlink'] },
+                { name: 'insert', items: ['Image', 'Table', 'HorizontalRule'] },
+                { name: 'styles', items: ['Format', 'Font', 'FontSize'] },
+                { name: 'colors', items: ['TextColor', 'BGColor'] },
+                { name: 'tools', items: ['Maximize', 'Source'] }
+            ]
+        });
+        
+        CKEDITOR.instances.content.on('change', function() {
+            updatePreview();
+        });
+    }
+    
+    // Show/hide planned work details based on announcement type
+    duyuruTipiSelect.addEventListener('change', function() {
+        if (this.value === 'planned_work' || this.value === 'maintenance') {
+            plannedWorkCard.style.display = 'block';
+        } else {
+            plannedWorkCard.style.display = 'none';
+        }
+        updatePreview();
+    });
+    
+    // Update preview on form changes
+    ['title', 'duyuru_tipi', 'onem_seviyesi', 'sabitle'].forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('change', updatePreview);
+            field.addEventListener('input', updatePreview);
+        }
+    });
+    
+    // Button handlers
+    saveDraftBtn.addEventListener('click', function() {
+        formAction.value = 'draft';
+        submitForm();
+    });
+    
+    publishBtn.addEventListener('click', function() {
+        formAction.value = 'publish';
+        submitForm();
+    });
+    
+    // Form submission
+    function submitForm() {
+        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.content) {
+            CKEDITOR.instances.content.updateElement();
+        }
+        
+        if (form.checkValidity()) {
+            const formData = new FormData(form);
+            const announcementId = document.getElementById('announcementId').value;
+            const url = announcementId ? 
+                `/duyurular/api/announcement/${announcementId}/update/` : 
+                '/duyurular/api/announcement/create/';
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(modal).hide();
+                    showAlert(data.message || 'Duyuru başarıyla kaydedildi!', 'success');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showAlert(data.message || 'Bir hata oluştu!', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Bir hata oluştu!', 'danger');
+            });
+        } else {
+            form.classList.add('was-validated');
+        }
+    }
+    
+    // Update preview
+    function updatePreview() {
+        const title = document.getElementById('title').value || 'Başlık buraya gelecek';
+        const type = document.getElementById('duyuru_tipi').value;
+        const priority = document.getElementById('onem_seviyesi').value;
+        const pinned = document.getElementById('sabitle').checked;
+        
+        let content = '';
+        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.content) {
+            content = CKEDITOR.instances.content.getData();
+        } else {
+            content = document.getElementById('content').value;
+        }
+        
+        // Update preview elements
+        document.getElementById('previewTitle').textContent = title;
+        document.getElementById('previewPinned').style.display = pinned ? 'inline' : 'none';
+        
+        // Type badge
+        const typeLabels = {
+            'general': 'Genel',
+            'planned_work': 'Planlı Çalışma',
+            'maintenance': 'Bakım',
+            'outage': 'Kesinti',
+            'update': 'Güncelleme',
+            'info': 'Bilgilendirme'
+        };
+        document.getElementById('previewType').textContent = typeLabels[type] || 'Tür';
+        
+        // Priority badge
+        const priorityLabels = {
+            'low': 'Düşük',
+            'normal': 'Normal',
+            'high': 'Yüksek',
+            'critical': 'Kritik'
+        };
+        document.getElementById('previewPriority').textContent = priorityLabels[priority] || 'Öncelik';
+        
+        // Content preview (strip HTML and truncate)
+        const contentText = content.replace(/<[^>]*>/g, '').substring(0, 100) + '...';
+        document.getElementById('previewContent').textContent = contentText || 'İçerik önizlemesi buraya gelecek...';
+    }
+    
+    // Reset form when modal is hidden
+    modal.addEventListener('hidden.bs.modal', function() {
+        form.reset();
+        form.classList.remove('was-validated');
+        document.getElementById('announcementId').value = '';
+        document.getElementById('modalTitle').textContent = 'Yeni Duyuru';
+        plannedWorkCard.style.display = 'none';
+        
+        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.content) {
+            CKEDITOR.instances.content.setData('');
+        }
+        
+        updatePreview();
+    });
+});
+
+// Global function to populate modal with existing announcement data
+function populateAnnouncementModal(data) {
+    document.getElementById('announcementId').value = data.id;
+    document.getElementById('modalTitle').textContent = 'Duyuru Düzenle';
+    document.getElementById('title').value = data.title;
+    document.getElementById('category').value = data.category || '';
+    document.getElementById('duyuru_tipi').value = data.duyuru_tipi;
+    document.getElementById('onem_seviyesi').value = data.onem_seviyesi;
+    document.getElementById('ilgili_urun').value = data.ilgili_urun || '';
+    document.getElementById('sabitle').checked = data.sabitle;
+    
+    if (data.yayin_bitis_tarihi) {
+        document.getElementById('yayin_bitis_tarihi').value = data.yayin_bitis_tarihi;
+    }
+    
+    if (data.calisma_tarihi) {
+        document.getElementById('calisma_tarihi').value = data.calisma_tarihi;
+    }
+    
+    // Show planned work card if needed
+    if (data.duyuru_tipi === 'planned_work' || data.duyuru_tipi === 'maintenance') {
+        document.getElementById('plannedWorkCard').style.display = 'block';
+    }
+    
+    // Set content
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.content) {
+        CKEDITOR.instances.content.setData(data.content);
+    } else {
+        document.getElementById('content').value = data.content;
+    }
+    
+    // Update preview
+    setTimeout(() => {
+        updatePreview();
+    }, 100);
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+</script>

@@ -1,0 +1,47 @@
+AskGT HAFTALIK RAPORU
+{{ week_start }} - {{ week_end }}
+========================================
+
+GENEL İSTATİSTİKLER
+-------------------
+Toplam Doküman: {{ total_documents }}
+Kategori Sayısı: {{ total_categories }}
+Bu Hafta Yeni: {{ new_documents_count }}
+Toplam Görüntülenme: {{ total_views }}
+
+BU HAFTA EKLENEN DOKÜMANLAR
+---------------------------
+{% for document in new_documents %}
+• {{ document.baslik }}
+  Kategori: {{ document.kategori }}
+  Tarih: {{ document.eklenme_tarihi|date:"d.m.Y H:i" }}
+  {% if document.view_count > 0 %}Görüntülenme: {{ document.view_count }}{% endif %}
+
+{% empty %}
+Bu hafta yeni doküman eklenmedi.
+
+{% endfor %}
+
+EN POPÜLER DOKÜMANLAR
+--------------------
+{% for document in popular_documents %}
+{{ forloop.counter }}. {{ document.baslik }}
+   Kategori: {{ document.kategori }}
+   Görüntülenme: {{ document.view_count }}
+
+{% empty %}
+Henüz popüler doküman bulunmuyor.
+
+{% endfor %}
+
+KATEGORİ DAĞILIMI
+----------------
+{% for category in category_stats %}
+{{ category.kategori }}: {{ category.count }} doküman
+{% empty %}
+Kategori bulunamadı.
+{% endfor %}
+
+========================================
+Bu rapor otomatik olarak oluşturulmuştur.
+Portall AskGT Sistemi - {{ "now"|date:"d.m.Y H:i" }}

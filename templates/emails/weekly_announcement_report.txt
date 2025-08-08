@@ -1,0 +1,69 @@
+PORTALL - HAFTALIK DUYURU RAPORU
+{{ "=" * 50 }}
+
+Rapor Dönemi: {{ week_start }} - {{ week_end }}
+
+HAFTALIK İSTATİSTİKLER
+{{ "-" * 25 }}
+
+Yeni Duyuru: {{ new_announcements }}
+Bu Hafta Yayınlanan: {{ published_this_week }}
+Arşivlenen: {{ archived_this_week }}
+Toplam Aktif: {{ total_active }}
+
+{% if popular_announcements %}
+EN ÇOK GÖRÜNTÜLENEN DUYURULAR
+{{ "-" * 35 }}
+
+{% for item in popular_announcements %}
+{{ forloop.counter }}. {{ item.announcement__title }}
+   Görüntülenme: {{ item.view_count }}
+
+{% endfor %}
+{% endif %}
+HAFTA ÖZETİ
+{{ "-" * 12 }}
+
+{% if new_announcements > 0 %}
+• {{ new_announcements }} yeni duyuru oluşturuldu
+{% endif %}
+{% if published_this_week > 0 %}
+• {{ published_this_week }} duyuru yayınlandı
+{% endif %}
+{% if archived_this_week > 0 %}
+• {{ archived_this_week }} duyuru arşivlendi
+{% endif %}
+• Toplam {{ total_active }} aktif duyuru bulunuyor
+{% if popular_announcements %}
+• En popüler duyuru {{ popular_announcements.0.view_count }} kez görüntülendi
+{% endif %}
+
+ÖNERİLER
+{{ "-" * 10 }}
+
+{% if new_announcements == 0 %}
+• Bu hafta yeni duyuru oluşturulmadı. Ekip ile düzenli iletişim 
+  için duyuru paylaşımını artırabilirsiniz.
+{% endif %}
+{% if archived_this_week > 5 %}
+• Bu hafta çok sayıda duyuru arşivlendi. Duyuru sürelerini 
+  gözden geçirebilirsiniz.
+{% endif %}
+• Popüler duyuruları analiz ederek benzer içerik türlerini 
+  artırabilirsiniz
+• Düzenli duyuru yayınlama programı oluşturmayı düşünebilirsiniz
+• Duyuru kategorilerinin kullanım oranlarını kontrol edebilirsiniz
+
+LİNKLER
+{{ "-" * 8 }}
+
+Duyuru Yönetimi: {{ site_url }}/duyurular/
+Yeni Duyuru Oluştur: {{ site_url }}/duyurular/create/
+Portall Ana Sayfa: {{ site_url }}/
+
+{{ "=" * 50 }}
+Bu rapor Portall Duyuru Sistemi tarafından otomatik olarak 
+oluşturulmuştur.
+
+Rapor Tarihi: {{ week_end }}
+{{ "=" * 50 }}

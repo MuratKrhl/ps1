@@ -1,0 +1,66 @@
+PORTALL - HAFTALIK SERTİFİKA RAPORU
+{{ "=" * 50 }}
+
+Rapor Dönemi: {{ week_start }} - {{ week_end }}
+
+GENEL İSTATİSTİKLER
+{{ "-" * 20 }}
+
+Toplam Sertifika: {{ total_certificates }}
+30 Gün İçinde Dolacak: {{ total_expiring }}
+Süresi Dolmuş: {{ total_expired }}
+Bu Hafta Gönderilen Uyarı: {{ weekly_notifications }}
+
+SERTİFİKA TÜRÜ DETAYLARI
+{{ "-" * 25 }}
+
+KDB Sertifikaları:
+  - Toplam: {{ kdb_stats.total }}
+  - 30 Gün İçinde Dolacak: {{ kdb_stats.expiring_30 }}
+  - 7 Gün İçinde Dolacak: {{ kdb_stats.expiring_7 }}
+  - Süresi Dolmuş: {{ kdb_stats.expired }}
+
+Java Sertifikaları:
+  - Toplam: {{ java_stats.total }}
+  - 30 Gün İçinde Dolacak: {{ java_stats.expiring_30 }}
+  - 7 Gün İçinde Dolacak: {{ java_stats.expiring_7 }}
+  - Süresi Dolmuş: {{ java_stats.expired }}
+
+{% if total_expiring > 0 or total_expired > 0 %}
+DİKKAT GEREKEN DURUMLAR
+{{ "-" * 25 }}
+
+{% if total_expired > 0 %}
+⚠️  {{ total_expired }} sertifikanın süresi dolmuş!
+    Bu sertifikalar acil olarak yenilenmelidir.
+{% endif %}
+
+{% if total_expiring > 0 %}
+⚠️  {{ total_expiring }} sertifikanın süresi 30 gün içinde dolacak.
+    Yenileme planlaması yapılmalıdır.
+{% endif %}
+
+{% endif %}
+ÖNERİLER
+{{ "-" * 10 }}
+
+1. Süresi dolmuş sertifikaları öncelikle yenileyin
+2. 30 gün içinde dolacak sertifikalar için yenileme planlaması yapın
+3. Test ortamında sertifika yenileme süreçlerini deneyin
+4. İlgili uygulama ekipleriyle koordine olun
+5. Sertifika senkronizasyonlarının düzenli çalıştığını kontrol edin
+
+LİNKLER
+{{ "-" * 8 }}
+
+Sertifika Dashboard: {{ portal_url }}/sertifikalar/dashboard/
+KDB Sertifikaları: {{ portal_url }}/sertifikalar/kdb/
+Java Sertifikaları: {{ portal_url }}/sertifikalar/java/
+Portall Ana Sayfa: {{ portal_url }}/
+
+{{ "=" * 50 }}
+Bu rapor Portall Sertifika Yönetim Sistemi tarafından 
+otomatik olarak oluşturulmuştur.
+
+Rapor Tarihi: {{ week_end }}
+{{ "=" * 50 }}

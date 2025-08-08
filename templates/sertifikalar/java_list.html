@@ -1,0 +1,457 @@
+{% extends "layouts/main.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">{{ page_title }}</h6>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'sertifikalar:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-arrow-left me-1"></i>Dashboard
+                            </a>
+                            {% if perms.sertifikalar.change_javacertificate %}
+                            <button class="btn btn-info btn-sm" onclick="syncCertificates()">
+                                <i class="fas fa-sync me-1"></i>Senkronize Et
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6>Filtreler</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Arama</label>
+                            <input type="text" class="form-control" name="search" value="{{ request.GET.search }}" 
+                                   placeholder="Sertifika adı, sunucu, uygulama...">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Ortam</label>
+                            <select class="form-select" name="environment">
+                                <option value="">Tümü</option>
+                                <option value="production" {% if request.GET.environment == 'production' %}selected{% endif %}>Production</option>
+                                <option value="test" {% if request.GET.environment == 'test' %}selected{% endif %}>Test</option>
+                                <option value="development" {% if request.GET.environment == 'development' %}selected{% endif %}>Development</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Durum</label>
+                            <select class="form-select" name="status">
+                                <option value="">Tümü</option>
+                                <option value="valid" {% if request.GET.status == 'valid' %}selected{% endif %}>Geçerli</option>
+                                <option value="expiring" {% if request.GET.status == 'expiring' %}selected{% endif %}>Yaklaşan</option>
+                                <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Süresi Dolmuş</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Keystore Tipi</label>
+                            <select class="form-select" name="keystore_type">
+                                <option value="">Tümü</option>
+                                <option value="JKS" {% if request.GET.keystore_type == 'JKS' %}selected{% endif %}>JKS</option>
+                                <option value="PKCS12" {% if request.GET.keystore_type == 'PKCS12' %}selected{% endif %}>PKCS12</option>
+                                <option value="JCEKS" {% if request.GET.keystore_type == 'JCEKS' %}selected{% endif %}>JCEKS</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i>Filtrele
+                                </button>
+                                <a href="{% url 'sertifikalar:java_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i>Temizle
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>Sonuçlar ({{ page_obj.paginator.count }} sertifika)</h6>
+                        <div class="d-flex gap-2">
+                            <div class="btn-group" role="group">
+                                <input type="radio" class="btn-check" name="view_mode" id="table_view" checked>
+                                <label class="btn btn-outline-success btn-sm" for="table_view">
+                                    <i class="fas fa-table"></i>
+                                </label>
+                                <input type="radio" class="btn-check" name="view_mode" id="card_view">
+                                <label class="btn btn-outline-success btn-sm" for="card_view">
+                                    <i class="fas fa-th-large"></i>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <!-- Table View -->
+                    <div id="table-view-content">
+                        <div class="table-responsive p-0">
+                            <table class="table align-items-center mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Sertifika</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Sunucu/Uygulama</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Keystore</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Geçerlilik</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Durum</th>
+                                        <th class="text-secondary opacity-7">İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for certificate in certificates %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex px-2 py-1">
+                                                <div>
+                                                    <div class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-success">
+                                                        <i class="fab fa-java text-white opacity-10"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex flex-column justify-content-center ms-3">
+                                                    <h6 class="mb-0 text-sm">{{ certificate.common_name }}</h6>
+                                                    <p class="text-xs text-secondary mb-0">
+                                                        {{ certificate.alias|default:"Java Certificate" }}
+                                                    </p>
+                                                    {% if certificate.subject_alternative_names %}
+                                                    <p class="text-xs text-secondary mb-0">
+                                                        SAN: {{ certificate.subject_alternative_names|truncatechars:30 }}
+                                                    </p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0">{{ certificate.server_hostname }}</p>
+                                            <p class="text-xs text-secondary mb-0">{{ certificate.java_application|default:"" }}</p>
+                                            <p class="text-xs text-secondary mb-0">{{ certificate.environment|default:"" }}</p>
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            <div class="d-flex flex-column align-items-center">
+                                                <span class="badge badge-sm bg-gradient-info mb-1">{{ certificate.keystore_type|default:"JKS" }}</span>
+                                                <small class="text-xs text-secondary">{{ certificate.keystore_path|default:""|truncatechars:20 }}</small>
+                                            </div>
+                                        </td>
+                                        <td class="align-middle text-center text-sm">
+                                            <span class="text-secondary text-xs font-weight-bold">
+                                                {{ certificate.valid_from|date:"d.m.Y" }} - {{ certificate.valid_to|date:"d.m.Y" }}
+                                            </span>
+                                            <br>
+                                            <small class="text-xs text-secondary">
+                                                {{ certificate.valid_to|timeuntil }} kaldı
+                                            </small>
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            {% with days=certificate.days_until_expiry %}
+                                            {% if days < 0 %}
+                                            <span class="badge badge-sm bg-gradient-danger">Süresi Dolmuş</span>
+                                            {% elif days <= 7 %}
+                                            <span class="badge badge-sm bg-gradient-danger">{{ days }} gün</span>
+                                            {% elif days <= 30 %}
+                                            <span class="badge badge-sm bg-gradient-warning">{{ days }} gün</span>
+                                            {% else %}
+                                            <span class="badge badge-sm bg-gradient-success">Geçerli</span>
+                                            {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                        <td class="align-middle">
+                                            <div class="dropdown">
+                                                <button class="btn btn-link text-secondary mb-0" type="button" data-bs-toggle="dropdown">
+                                                    <i class="fas fa-ellipsis-v text-xs"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <a class="dropdown-item" href="{% url 'sertifikalar:java_detail' certificate.id %}">
+                                                            <i class="fas fa-eye me-2"></i>Detay
+                                                        </a>
+                                                    </li>
+                                                    {% if certificate.java_application %}
+                                                    <li>
+                                                        <a class="dropdown-item" href="#" onclick="searchRelatedApps('{{ certificate.java_application }}')">
+                                                            <i class="fas fa-search me-2"></i>İlgili Uygulamalar
+                                                        </a>
+                                                    </li>
+                                                    {% endif %}
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <a class="dropdown-item text-info" href="#" onclick="copyCertInfo('{{ certificate.common_name }}', '{{ certificate.server_hostname }}', '{{ certificate.keystore_path }}')">
+                                                            <i class="fas fa-copy me-2"></i>Bilgileri Kopyala
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <div class="text-center">
+                                                <i class="fab fa-java fa-3x text-secondary mb-3"></i>
+                                                <h5>Java Sertifikası Bulunamadı</h5>
+                                                <p class="text-sm text-secondary">
+                                                    {% if request.GET.search or request.GET.environment or request.GET.status %}
+                                                    Arama kriterlerinize uygun Java sertifikası bulunamadı. Filtreleri değiştirmeyi deneyin.
+                                                    {% else %}
+                                                    Henüz Java sertifikası bulunmuyor. Senkronizasyon çalıştırın.
+                                                    {% endif %}
+                                                </p>
+                                                {% if not request.GET.search and not request.GET.environment and not request.GET.status %}
+                                                {% if perms.sertifikalar.change_javacertificate %}
+                                                <button class="btn btn-success" onclick="syncCertificates()">
+                                                    <i class="fas fa-sync me-1"></i>Java Sertifikalarını Senkronize Et
+                                                </button>
+                                                {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Card View -->
+                    <div id="card-view-content" style="display: none;">
+                        <div class="row">
+                            {% for certificate in certificates %}
+                            <div class="col-xl-4 col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header pb-0">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-0">{{ certificate.common_name }}</h6>
+                                                <p class="text-sm text-secondary mb-0">{{ certificate.alias|default:"Java Certificate" }}</p>
+                                            </div>
+                                            {% with days=certificate.days_until_expiry %}
+                                            {% if days < 0 %}
+                                            <span class="badge bg-gradient-danger">Süresi Dolmuş</span>
+                                            {% elif days <= 7 %}
+                                            <span class="badge bg-gradient-danger">{{ days }} gün</span>
+                                            {% elif days <= 30 %}
+                                            <span class="badge bg-gradient-warning">{{ days }} gün</span>
+                                            {% else %}
+                                            <span class="badge bg-gradient-success">Geçerli</span>
+                                            {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                    <div class="card-body pt-2">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <p class="text-xs mb-1"><strong>Sunucu:</strong></p>
+                                                <p class="text-sm mb-2">{{ certificate.server_hostname }}</p>
+                                            </div>
+                                            <div class="col-6">
+                                                <p class="text-xs mb-1"><strong>Uygulama:</strong></p>
+                                                <p class="text-sm mb-2">{{ certificate.java_application|default:"Belirtilmemiş" }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <p class="text-xs mb-1"><strong>Keystore:</strong></p>
+                                                <p class="text-sm mb-2">{{ certificate.keystore_type|default:"JKS" }}</p>
+                                            </div>
+                                            <div class="col-6">
+                                                <p class="text-xs mb-1"><strong>Ortam:</strong></p>
+                                                <p class="text-sm mb-2">{{ certificate.environment|default:"Belirtilmemiş" }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <p class="text-xs mb-1"><strong>Son Kullanma:</strong></p>
+                                                <p class="text-sm mb-2">{{ certificate.valid_to|date:"d.m.Y H:i" }}</p>
+                                            </div>
+                                        </div>
+                                        {% if certificate.keystore_path %}
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <p class="text-xs mb-1"><strong>Keystore Yolu:</strong></p>
+                                                <p class="text-sm mb-2 font-monospace">{{ certificate.keystore_path|truncatechars:40 }}</p>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge badge-sm bg-gradient-success">Java</span>
+                                            <a href="{% url 'sertifikalar:java_detail' certificate.id %}" class="btn btn-success btn-sm">
+                                                <i class="fas fa-eye me-1"></i>Detay
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-12">
+                                <div class="text-center py-5">
+                                    <i class="fab fa-java fa-3x text-secondary mb-3"></i>
+                                    <h5>Java Sertifikası Bulunamadı</h5>
+                                    <p class="text-sm text-secondary">
+                                        {% if request.GET.search or request.GET.environment or request.GET.status %}
+                                        Arama kriterlerinize uygun Java sertifikası bulunamadı.
+                                        {% else %}
+                                        Henüz Java sertifikası bulunmuyor.
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <div class="d-flex justify-content-center mt-4">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// View mode toggle
+document.getElementById('table_view').addEventListener('change', function() {
+    if (this.checked) {
+        document.getElementById('table-view-content').style.display = 'block';
+        document.getElementById('card-view-content').style.display = 'none';
+    }
+});
+
+document.getElementById('card_view').addEventListener('change', function() {
+    if (this.checked) {
+        document.getElementById('table-view-content').style.display = 'none';
+        document.getElementById('card-view-content').style.display = 'block';
+    }
+});
+
+// Sync certificates function
+function syncCertificates() {
+    if (!confirm('Java sertifikaları senkronize edilsin mi? Bu işlem birkaç dakika sürebilir.')) {
+        return;
+    }
+    
+    const btn = event.target;
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Senkronize ediliyor...';
+    btn.disabled = true;
+    
+    fetch('/sertifikalar/api/sync-java/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Java sertifikaları başarıyla senkronize edildi', 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            showToast(data.message || 'Senkronizasyon sırasında hata oluştu', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Senkronizasyon sırasında hata oluştu', 'error');
+    })
+    .finally(() => {
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+    });
+}
+
+// Search related apps
+function searchRelatedApps(appName) {
+    window.open(`/envanter/?search=${encodeURIComponent(appName)}`, '_blank');
+}
+
+// Copy certificate info
+function copyCertInfo(commonName, hostname, keystorePath) {
+    const text = `Sertifika: ${commonName}\nSunucu: ${hostname}\nKeystore: ${keystorePath || 'Belirtilmemiş'}`;
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('Sertifika bilgileri kopyalandı', 'success');
+    }).catch(() => {
+        showToast('Kopyalama işlemi başarısız', 'error');
+    });
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

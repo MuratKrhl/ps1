@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Performance Overview - Portall{% endblock %}
+
+{% block extra_css %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- ApexCharts -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<style>
+.technology-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 1px solid #e9ecef;
+}
+.technology-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border-color: #007bff;
+}
+.health-status {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+.health-healthy { background-color: #28a745; }
+.health-warning { background-color: #ffc107; }
+.health-critical { background-color: #dc3545; }
+.health-unknown { background-color: #6c757d; }
+.metric-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">
+                        <i class="ri-dashboard-3-line me-2"></i>Performance Overview
+                    </h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'performans:dashboard' %}">Performance</a></li>
+                            <li class="breadcrumb-item active">Overview</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overview Stats -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="ri-server-line" style="font-size: 2.5rem;"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h4 class="mb-1" id="total-technologies">{{ technologies|length }}</h4>
+                                <p class="mb-0">Teknoloji</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="ri-check-double-line" style="font-size: 2.5rem;"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h4 class="mb-1" id="healthy-services">-</h4>
+                                <p class="mb-0">Sağlıklı Servis</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="ri-error-warning-line" style="font-size: 2.5rem;"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h4 class="mb-1" id="total-problems">-</h4>
+                                <p class="mb-0">Toplam Problem</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="ri-refresh-line" style="font-size: 2.5rem;"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h4 class="mb-1" id="last-updated">-</h4>
+                                <p class="mb-0">Son Güncelleme</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technology Grid -->
+        <div class="row" id="technology-grid">
+            {% for tech in technologies %}
+            <div class="col-xl-4 col-lg-6 mb-4">
+                <div class="card technology-card" data-technology="{{ tech.id }}" onclick="openTechnologyDashboard('{{ tech.id }}')">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
+                                        <i class="{{ tech.icon }}"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h5 class="mb-1">{{ tech.name }}</h5>
+                                <div class="d-flex align-items-center">
+                                    <span class="health-status health-unknown" id="health-{{ tech.id }}"></span>
+                                    <span class="text-muted" id="status-text-{{ tech.id }}">Yükleniyor...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Metrics Row -->
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="border-end">
+                                    <h6 class="mb-1" id="entities-{{ tech.id }}">-</h6>
+                                    <p class="text-muted mb-0 small">Servis</p>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border-end">
+                                    <h6 class="mb-1" id="problems-{{ tech.id }}">-</h6>
+                                    <p class="text-muted mb-0 small">Problem</p>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <h6 class="mb-1" id="cpu-{{ tech.id }}">-</h6>
+                                <p class="text-muted mb-0 small">CPU %</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Loading Indicator -->
+                        <div class="text-center mt-3" id="loading-{{ tech.id }}">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Refresh Button -->
+        <div class="row">
+            <div class="col-12 text-center">
+                <button type="button" class="btn btn-primary" id="refresh-overview" onclick="refreshOverview()">
+                    <i class="ri-refresh-line me-1"></i>Verileri Yenile
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global variables
+let overviewData = {};
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    loadOverviewData();
+    
+    // Auto refresh every 5 minutes
+    setInterval(loadOverviewData, 300000);
+});
+
+// Load overview data from API
+function loadOverviewData() {
+    const refreshBtn = document.getElementById('refresh-overview');
+    if (refreshBtn) {
+        refreshBtn.innerHTML = '<i class="ri-loader-4-line spin me-1"></i>Yükleniyor...';
+        refreshBtn.disabled = true;
+    }
+    
+    fetch('/performans/api/overview/')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            overviewData = data.overview;
+            updateOverviewUI(data.overview);
+            updateOverviewStats(data.overview);
+        } else {
+            showError('Veri yüklenirken hata oluştu: ' + (data.error || 'Bilinmeyen hata'));
+        }
+    })
+    .catch(error => {
+        console.error('Error loading overview data:', error);
+        showError('Veri yüklenirken hata oluştu');
+    })
+    .finally(() => {
+        if (refreshBtn) {
+            refreshBtn.innerHTML = '<i class="ri-refresh-line me-1"></i>Verileri Yenile';
+            refreshBtn.disabled = false;
+        }
+    });
+}
+
+// Update overview UI with data
+function updateOverviewUI(overview) {
+    Object.keys(overview).forEach(techId => {
+        const techData = overview[techId];
+        
+        // Hide loading indicator
+        const loading = document.getElementById(`loading-${techId}`);
+        if (loading) loading.style.display = 'none';
+        
+        // Update health status
+        const healthIndicator = document.getElementById(`health-${techId}`);
+        const statusText = document.getElementById(`status-text-${techId}`);
+        
+        if (healthIndicator && statusText) {
+            healthIndicator.className = `health-status health-${techData.health_status}`;
+            
+            const statusMap = {
+                'healthy': 'Sağlıklı',
+                'warning': 'Uyarı',
+                'critical': 'Kritik',
+                'unknown': 'Bilinmiyor'
+            };
+            statusText.textContent = statusMap[techData.health_status] || 'Bilinmiyor';
+        }
+        
+        // Update metrics
+        const entitiesEl = document.getElementById(`entities-${techId}`);
+        const problemsEl = document.getElementById(`problems-${techId}`);
+        const cpuEl = document.getElementById(`cpu-${techId}`);
+        
+        if (entitiesEl) entitiesEl.textContent = techData.entity_count || 0;
+        if (problemsEl) problemsEl.textContent = techData.problem_count || 0;
+        
+        // CPU usage from key metrics
+        if (cpuEl && techData.key_metrics && techData.key_metrics.cpu_usage) {
+            const cpuValue = Math.round(techData.key_metrics.cpu_usage.value || 0);
+            cpuEl.textContent = cpuValue + '%';
+        } else if (cpuEl) {
+            cpuEl.textContent = '-';
+        }
+    });
+}
+
+// Update overview statistics
+function updateOverviewStats(overview) {
+    let healthyCount = 0;
+    let totalProblems = 0;
+    let lastUpdated = null;
+    
+    Object.values(overview).forEach(techData => {
+        if (techData.health_status === 'healthy') healthyCount++;
+        totalProblems += techData.problem_count || 0;
+        
+        if (techData.last_updated) {
+            const updated = new Date(techData.last_updated);
+            if (!lastUpdated || updated > lastUpdated) {
+                lastUpdated = updated;
+            }
+        }
+    });
+    
+    // Update stats cards
+    const healthyEl = document.getElementById('healthy-services');
+    const problemsEl = document.getElementById('total-problems');
+    const updatedEl = document.getElementById('last-updated');
+    
+    if (healthyEl) healthyEl.textContent = healthyCount;
+    if (problemsEl) problemsEl.textContent = totalProblems;
+    if (updatedEl && lastUpdated) {
+        updatedEl.textContent = lastUpdated.toLocaleTimeString('tr-TR', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+}
+
+// Open technology dashboard
+function openTechnologyDashboard(technology) {
+    window.location.href = `/performans/technology/${technology}/`;
+}
+
+// Refresh overview data
+function refreshOverview() {
+    loadOverviewData();
+}
+
+// Show error message
+function showError(message) {
+    // Simple alert for now, can be replaced with toast notification
+    alert(message);
+}
+
+// Helper function for spinning animation
+const style = document.createElement('style');
+style.textContent = `
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

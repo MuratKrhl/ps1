@@ -1,0 +1,338 @@
+{% extends "layouts/main.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">{{ page_title }}</h6>
+                        <a href="{% url 'envanter:inventory_list' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>Geri
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <form method="post" class="row g-3">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information -->
+                        <div class="col-12">
+                            <h6 class="text-uppercase text-body text-xs font-weight-bolder">Temel Bilgiler</h6>
+                            <hr class="horizontal dark mt-0 mb-3">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="text-danger text-sm">{{ form.name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="{{ form.code_name.id_for_label }}" class="form-label">{{ form.code_name.label }}</label>
+                            {{ form.code_name }}
+                            {% if form.code_name.errors %}
+                                <div class="text-danger text-sm">{{ form.code_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-12">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger text-sm">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="{{ form.version.id_for_label }}" class="form-label">{{ form.version.label }}</label>
+                            {{ form.version }}
+                            {% if form.version.errors %}
+                                <div class="text-danger text-sm">{{ form.version.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="{{ form.environment.id_for_label }}" class="form-label">{{ form.environment.label }}</label>
+                            {{ form.environment }}
+                            {% if form.environment.errors %}
+                                <div class="text-danger text-sm">{{ form.environment.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="{{ form.application_type.id_for_label }}" class="form-label">{{ form.application_type.label }}</label>
+                            {{ form.application_type }}
+                            {% if form.application_type.errors %}
+                                <div class="text-danger text-sm">{{ form.application_type.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Status and Business Info -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-uppercase text-body text-xs font-weight-bolder">Durum ve İş Bilgileri</h6>
+                            <hr class="horizontal dark mt-0 mb-3">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">{{ form.status.label }}</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                                <div class="text-danger text-sm">{{ form.status.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="{{ form.business_criticality.id_for_label }}" class="form-label">{{ form.business_criticality.label }}</label>
+                            {{ form.business_criticality }}
+                            {% if form.business_criticality.errors %}
+                                <div class="text-danger text-sm">{{ form.business_criticality.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="{{ form.owner.id_for_label }}" class="form-label">{{ form.owner.label }}</label>
+                            {{ form.owner }}
+                            {% if form.owner.errors %}
+                                <div class="text-danger text-sm">{{ form.owner.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="{{ form.responsible_team.id_for_label }}" class="form-label">{{ form.responsible_team.label }}</label>
+                            {{ form.responsible_team }}
+                            {% if form.responsible_team.errors %}
+                                <div class="text-danger text-sm">{{ form.responsible_team.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                {{ form.monitoring_enabled }}
+                                <label class="form-check-label" for="{{ form.monitoring_enabled.id_for_label }}">
+                                    {{ form.monitoring_enabled.label }}
+                                </label>
+                            </div>
+                            {% if form.monitoring_enabled.errors %}
+                                <div class="text-danger text-sm">{{ form.monitoring_enabled.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Technical Details -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-uppercase text-body text-xs font-weight-bolder">Teknik Detaylar</h6>
+                            <hr class="horizontal dark mt-0 mb-3">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="{{ form.port.id_for_label }}" class="form-label">{{ form.port.label }}</label>
+                            {{ form.port }}
+                            {% if form.port.errors %}
+                                <div class="text-danger text-sm">{{ form.port.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="form-check form-switch">
+                                {{ form.ssl_enabled }}
+                                <label class="form-check-label" for="{{ form.ssl_enabled.id_for_label }}">
+                                    {{ form.ssl_enabled.label }}
+                                </label>
+                            </div>
+                            {% if form.ssl_enabled.errors %}
+                                <div class="text-danger text-sm">{{ form.ssl_enabled.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="form-check form-switch">
+                                {{ form.sync_enabled }}
+                                <label class="form-check-label" for="{{ form.sync_enabled.id_for_label }}">
+                                    {{ form.sync_enabled.label }}
+                                </label>
+                            </div>
+                            {% if form.sync_enabled.errors %}
+                                <div class="text-danger text-sm">{{ form.sync_enabled.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Relationships -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-uppercase text-body text-xs font-weight-bolder">İlişkiler</h6>
+                            <hr class="horizontal dark mt-0 mb-3">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="{{ form.servers.id_for_label }}" class="form-label">{{ form.servers.label }}</label>
+                            {{ form.servers }}
+                            {% if form.servers.errors %}
+                                <div class="text-danger text-sm">{{ form.servers.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Ctrl tuşu ile birden fazla sunucu seçebilirsiniz.</small>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="{{ form.technologies.id_for_label }}" class="form-label">{{ form.technologies.label }}</label>
+                            {{ form.technologies }}
+                            {% if form.technologies.errors %}
+                                <div class="text-danger text-sm">{{ form.technologies.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Ctrl tuşu ile birden fazla teknoloji seçebilirsiniz.</small>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="{{ form.databases.id_for_label }}" class="form-label">{{ form.databases.label }}</label>
+                            {{ form.databases }}
+                            {% if form.databases.errors %}
+                                <div class="text-danger text-sm">{{ form.databases.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Ctrl tuşu ile birden fazla veritabanı seçebilirsiniz.</small>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="{{ form.tags.id_for_label }}" class="form-label">{{ form.tags.label }}</label>
+                            {{ form.tags }}
+                            {% if form.tags.errors %}
+                                <div class="text-danger text-sm">{{ form.tags.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Virgül ile ayırarak birden fazla etiket girebilirsiniz.</small>
+                        </div>
+                        
+                        <!-- URLs -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-uppercase text-body text-xs font-weight-bolder">Bağlantılar</h6>
+                            <hr class="horizontal dark mt-0 mb-3">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="{{ form.documentation_url.id_for_label }}" class="form-label">{{ form.documentation_url.label }}</label>
+                            {{ form.documentation_url }}
+                            {% if form.documentation_url.errors %}
+                                <div class="text-danger text-sm">{{ form.documentation_url.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="{{ form.repository_url.id_for_label }}" class="form-label">{{ form.repository_url.label }}</label>
+                            {{ form.repository_url }}
+                            {% if form.repository_url.errors %}
+                                <div class="text-danger text-sm">{{ form.repository_url.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Form Errors -->
+                        {% if form.non_field_errors %}
+                        <div class="col-12">
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    <p class="mb-0">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Submit Buttons -->
+                        <div class="col-12 mt-4">
+                            <hr class="horizontal dark">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{% url 'envanter:inventory_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i>İptal
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>Kaydet
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form validation and enhancement
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-generate code name from application name
+    const nameField = document.getElementById('{{ form.name.id_for_label }}');
+    const codeNameField = document.getElementById('{{ form.code_name.id_for_label }}');
+    
+    if (nameField && codeNameField && !codeNameField.value) {
+        nameField.addEventListener('input', function() {
+            const name = this.value.toLowerCase()
+                .replace(/[^a-z0-9\s]/g, '') // Remove special characters
+                .replace(/\s+/g, '-') // Replace spaces with hyphens
+                .substring(0, 50); // Limit length
+            
+            if (name && !codeNameField.value) {
+                codeNameField.value = name;
+            }
+        });
+    }
+    
+    // SSL and Port validation
+    const sslField = document.getElementById('{{ form.ssl_enabled.id_for_label }}');
+    const portField = document.getElementById('{{ form.port.id_for_label }}');
+    
+    if (sslField && portField) {
+        function validateSSLPort() {
+            const isSSL = sslField.checked;
+            const port = parseInt(portField.value);
+            
+            if (isSSL && port && [80, 8080, 3000, 5000].includes(port)) {
+                portField.classList.add('is-invalid');
+                showPortWarning('SSL aktifken HTTP portları kullanmayın.');
+            } else {
+                portField.classList.remove('is-invalid');
+                hidePortWarning();
+            }
+        }
+        
+        sslField.addEventListener('change', validateSSLPort);
+        portField.addEventListener('input', validateSSLPort);
+    }
+    
+    // Multi-select enhancement
+    const multiSelects = document.querySelectorAll('select[multiple]');
+    multiSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            const selectedCount = this.selectedOptions.length;
+            const label = this.previousElementSibling;
+            if (label && selectedCount > 0) {
+                label.innerHTML = label.innerHTML.split(' (')[0] + ` (${selectedCount} seçili)`;
+            }
+        });
+    });
+});
+
+function showPortWarning(message) {
+    const portField = document.getElementById('{{ form.port.id_for_label }}');
+    let warningDiv = portField.parentNode.querySelector('.port-warning');
+    
+    if (!warningDiv) {
+        warningDiv = document.createElement('div');
+        warningDiv.className = 'port-warning text-warning text-sm mt-1';
+        portField.parentNode.appendChild(warningDiv);
+    }
+    
+    warningDiv.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i>${message}`;
+}
+
+function hidePortWarning() {
+    const portField = document.getElementById('{{ form.port.id_for_label }}');
+    const warningDiv = portField.parentNode.querySelector('.port-warning');
+    if (warningDiv) {
+        warningDiv.remove();
+    }
+}
+</script>
+{% endblock %}

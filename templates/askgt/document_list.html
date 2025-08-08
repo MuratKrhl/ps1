@@ -1,0 +1,187 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - AskGT{% endblock %}
+
+{% block extra_css %}
+<style>
+.document-card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border-left: 4px solid #007bff;
+}
+.document-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+.document-title {
+    color: #495057;
+    text-decoration: none;
+    font-weight: 600;
+}
+.document-title:hover {
+    color: #007bff;
+    text-decoration: none;
+}
+.category-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+}
+.view-count {
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+.search-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">{{ page_title }}</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'askgt:documents_dashboard' %}">AskGT</a></li>
+                        <li class="breadcrumb-item active">{{ kategori }}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Stats -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card search-card">
+                <div class="card-body">
+                    <form method="get" class="d-flex">
+                        <input type="text" name="search" class="form-control me-2" 
+                               placeholder="Doküman ara..." value="{{ search_query }}">
+                        <button type="submit" class="btn btn-light">
+                            <i class="ri-search-line"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title mb-1">{{ total_count }}</h5>
+                    <p class="text-muted mb-0">{{ kategori }} Dokümanı</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documents List -->
+    <div class="row">
+        {% for document in documents %}
+        <div class="col-lg-6 col-xl-4 mb-3">
+            <div class="card document-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="category-badge">{{ document.kategori }}</span>
+                        <small class="view-count">
+                            <i class="ri-eye-line me-1"></i>{{ document.view_count }}
+                        </small>
+                    </div>
+                    
+                    <h6 class="card-title mb-2">
+                        <a href="{{ document.get_absolute_url }}" class="document-title" target="_blank">
+                            {{ document.baslik }}
+                        </a>
+                    </h6>
+                    
+                    {% if document.ozet %}
+                    <p class="card-text text-muted small mb-2">
+                        {{ document.ozet|truncatewords:15 }}
+                    </p>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="ri-calendar-line me-1"></i>
+                            {{ document.eklenme_tarihi|date:"d M Y" }}
+                        </small>
+                        <a href="{{ document.get_absolute_url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                            <i class="ri-external-link-line me-1"></i>Aç
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="ri-file-search-line display-4 text-muted mb-3"></i>
+                    <h5 class="text-muted">Doküman Bulunamadı</h5>
+                    <p class="text-muted mb-0">
+                        {% if search_query %}
+                            "{{ search_query }}" için sonuç bulunamadı.
+                        {% else %}
+                            Bu kategoride henüz doküman bulunmuyor.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if documents.has_other_pages %}
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if documents.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">İlk</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ documents.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Önceki</a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in documents.paginator.page_range %}
+                        {% if documents.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > documents.number|add:'-3' and num < documents.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if documents.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ documents.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Sonraki</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ documents.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">Son</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

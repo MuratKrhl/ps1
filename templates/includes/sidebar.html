@@ -1,0 +1,260 @@
+<!-- ========== App Menu ========== -->
+<div class="app-menu navbar-menu">
+    <!-- LOGO -->
+    <div class="navbar-brand-box">
+        <!-- Dark Logo-->
+        <a href="{% url 'dashboard:home' %}" class="logo logo-dark">
+            <span class="logo-sm">
+                <img src="{% load static %}{% static 'images/logo-sm.png' %}" alt="" height="22">
+            </span>
+            <span class="logo-lg">
+                <img src="{% load static %}{% static 'images/logo-dark.png' %}" alt="" height="17">
+            </span>
+        </a>
+        <!-- Light Logo-->
+        <a href="{% url 'dashboard:home' %}" class="logo logo-light">
+            <span class="logo-sm">
+                <img src="{% load static %}{% static 'images/logo-sm.png' %}" alt="" height="22">
+            </span>
+            <span class="logo-lg">
+                <img src="{% load static %}{% static 'images/logo-light.png' %}" alt="" height="17">
+            </span>
+        </a>
+    </div>
+    
+    <!-- User Info -->
+    {% if user.is_authenticated %}
+    <div class="p-3 border-bottom">
+        <div class="d-flex align-items-center">
+            <div class="flex-shrink-0 me-3">
+                <img src="{% static 'assets/images/users/avatar-1.jpg' %}" alt="" class="avatar-sm rounded-circle">
+
+            <div id="two-column-menu">
+            </div>
+            <ul class="navbar-nav" id="navbar-nav">
+                <li class="menu-title"><span data-key="t-menu">Menü</span></li>
+                
+                <!-- Dashboard -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{% url 'dashboard:home' %}">
+                        <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards">Dashboard</span>
+                    </a>
+                </li>
+
+                <!-- Envanter -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarEnvanter" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarEnvanter">
+                        <i class="ri-server-line"></i> <span data-key="t-envanter">Envanter</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarEnvanter">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="/envanter/sunucular/" class="nav-link" data-key="t-sunucular">Sunucular</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/envanter/uygulamalar/" class="nav-link" data-key="t-uygulamalar">Uygulamalar</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/envanter/veritabanlari/" class="nav-link" data-key="t-veritabanlari">Veritabanları</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- AskGT -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarAskGT" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarAskGT">
+                        <i class="ri-question-answer-line"></i> <span data-key="t-askgt">Bilgi Bankası</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarAskGT">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="/askgt/" class="nav-link" data-key="t-sorular">Sorular</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/askgt/kategoriler/" class="nav-link" data-key="t-kategoriler">Kategoriler</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/askgt/yeni-soru/" class="nav-link" data-key="t-yeni-soru">Yeni Soru</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Sertifikalar -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarSertifikalar" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarSertifikalar">
+                        <i class="ri-key-2-line"></i> <span data-key="t-sertifikalar">Sertifikalar</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarSertifikalar">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{% url 'sertifikalar:dashboard' %}" class="nav-link" data-key="t-sertifika-dashboard">Dashboard</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'sertifikalar:kdb_list' %}" class="nav-link" data-key="t-kdb-sertifikalar">KDB Sertifikaları</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'sertifikalar:java_list' %}" class="nav-link" data-key="t-java-sertifikalar">Java Sertifikaları</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Nöbetçi -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="/nobetci/">
+                        <i class="ri-calendar-check-line"></i> <span data-key="t-nobetci">Nöbet Listesi</span>
+                    </a>
+                </li>
+
+                <!-- Duyurular & Çalışmalar -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarDuyurular" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarDuyurular">
+                        <i class="ri-notification-3-line"></i> <span data-key="t-duyurular">Duyurular & Çalışmalar</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarDuyurular">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="/duyurular/" class="nav-link" data-key="t-tum-duyurular">Tüm Duyurular</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/duyurular/onemli/" class="nav-link" data-key="t-onemli">Önemli Duyurular</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/duyurular/?type=planned_work" class="nav-link" data-key="t-planli-calisma">Planlı Çalışmalar</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/duyurular/?type=maintenance" class="nav-link" data-key="t-bakim">Bakım Duyuruları</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- AskGT -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarAskGT" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarAskGT">
+                        <i class="ri-book-open-line"></i> <span data-key="t-askgt">AskGT</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarAskGT">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{% url 'askgt:home' %}" class="nav-link" data-key="t-askgt-home">Ana Sayfa</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'askgt:documents_dashboard' %}" class="nav-link" data-key="t-askgt-documents">Dokümanlar</a>
+                            </li>
+                            <li class="nav-item">
+                                <hr class="dropdown-divider">
+                            </li>
+                            <!-- Dinamik Kategoriler -->
+                            {% for category in askgt_categories %}
+                            <li class="nav-item">
+                                <a href="{% url 'askgt:document_list_by_category' category.kategori %}" class="nav-link">
+                                    <i class="ri-folder-2-line me-1"></i>{{ category.kategori }}
+                                    <span class="badge badge-soft-primary ms-auto">{{ category.count }}</span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Önemli Linkler -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="/linkler/">
+                        <i class="ri-links-line"></i> <span data-key="t-linkler">Önemli Linkler</span>
+                    </a>
+                </li>
+
+                <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-components">İşlemler</span></li>
+
+                <!-- Performans -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarPerformans" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarPerformans">
+                        <i class="ri-line-chart-line"></i> <span data-key="t-performans">Performans</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarPerformans">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="/performans/sunucular/" class="nav-link" data-key="t-sunucu-performans">Sunucu Performansı</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/performans/uygulamalar/" class="nav-link" data-key="t-uygulama-performans">Uygulama Performansı</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/performans/raporlar/" class="nav-link" data-key="t-raporlar">Raporlar</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Otomasyon -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarOtomasyon" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarOtomasyon">
+                        <i class="ri-settings-3-line"></i> <span data-key="t-otomasyon">Otomasyon</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarOtomasyon">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="/otomasyon/playbooks/" class="nav-link" data-key="t-playbooks">Playbook'lar</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/otomasyon/gecmis/" class="nav-link" data-key="t-gecmis">Çalıştırma Geçmişi</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Ansible -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarAnsible" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarAnsible">
+                        <i class="ri-settings-3-line"></i> <span data-key="t-ansible">Ansible</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarAnsible">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{% url 'otomasyon:ansible_job_templates' %}" class="nav-link" data-key="t-job-templates">Job Templates</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'otomasyon:ansible_job_executions' %}" class="nav-link" data-key="t-job-executions">Job Executions</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Nöbet Listesi -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{% url 'nobetci:nobetci_list' %}">
+                        <i class="ri-calendar-check-line"></i> <span data-key="t-nobetci">Nöbet Listesi</span>
+                    </a>
+                </li>
+
+                <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages">Yönetim</span></li>
+
+                <!-- Admin Panel -->
+                {% if user.is_staff %}
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="/admin/" target="_blank">
+                        <i class="ri-admin-line"></i> <span data-key="t-admin">Admin Panel</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                <!-- Ayarlar -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{% url 'dashboard:profile' %}">
+                        <i class="ri-account-circle-line"></i> <span data-key="t-profile">Profil Ayarları</span>
+                    </a>
+                </li>
+
+            </ul>
+        </div>
+        <!-- Sidebar -->
+    </div>
+
+    <div class="sidebar-background"></div>
+</div>
+<!-- Left Sidebar End -->
+<!-- Vertical Overlay-->
+<div class="vertical-overlay"></div>

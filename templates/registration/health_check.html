@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>Sistem Durumu | Portall</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="Portall - Middleware Operations Portal" name="description" />
+    <meta content="Portall Team" name="author" />
+    
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="{% static 'assets/images/favicon.ico' %}">
+    
+    <!-- Bootstrap Css -->
+    <link href="{% static 'assets/css/bootstrap.min.css' %}" id="bootstrap-style" rel="stylesheet" type="text/css" />
+    <!-- Icons Css -->
+    <link href="{% static 'assets/css/icons.min.css' %}" rel="stylesheet" type="text/css" />
+    <!-- App Css-->
+    <link href="{% static 'assets/css/app.min.css' %}" id="app-style" rel="stylesheet" type="text/css" />
+    
+    <style>
+        .auth-body-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .wrapper-page {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .card {
+            max-width: 600px;
+            width: 100%;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        .status-enabled { color: #28a745; }
+        .status-disabled { color: #6c757d; }
+        .status-error { color: #dc3545; }
+        .status-icon { font-size: 1.2rem; margin-right: 8px; }
+    </style>
+</head>
+
+<body class="auth-body-bg">
+    <div class="wrapper-page">
+        <div class="container-fluid p-0">
+            <div class="card">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <h3 class="text-primary font-weight-bold">
+                            <i class="mdi mdi-pulse"></i> Sistem Durumu
+                        </h3>
+                        <p class="text-muted">Portall Authentication System Health Check</p>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="mdi mdi-server-network status-icon"></i>
+                                        LDAP Durumu
+                                    </h6>
+                                    {% if ldap_status == 'enabled' %}
+                                        <span class="badge bg-success">
+                                            <i class="mdi mdi-check-circle"></i> Aktif
+                                        </span>
+                                        <p class="card-text small text-muted mt-2">
+                                            LDAP authentication sistemi çalışıyor
+                                        </p>
+                                    {% elif ldap_status == 'disabled' %}
+                                        <span class="badge bg-secondary">
+                                            <i class="mdi mdi-minus-circle"></i> Devre Dışı
+                                        </span>
+                                        <p class="card-text small text-muted mt-2">
+                                            LDAP authentication devre dışı
+                                        </p>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="mdi mdi-alert-circle"></i> Hata
+                                        </span>
+                                        <p class="card-text small text-muted mt-2">
+                                            LDAP kütüphanesi yüklenemedi
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="mdi mdi-shield-check status-icon"></i>
+                                        Brute-force Koruması
+                                    </h6>
+                                    {% if axes_status == 'enabled' %}
+                                        <span class="badge bg-success">
+                                            <i class="mdi mdi-check-circle"></i> Aktif
+                                        </span>
+                                        <p class="card-text small text-muted mt-2">
+                                            Django Axes koruması çalışıyor
+                                        </p>
+                                    {% else %}
+                                        <span class="badge bg-warning">
+                                            <i class="mdi mdi-alert"></i> Devre Dışı
+                                        </span>
+                                        <p class="card-text small text-muted mt-2">
+                                            Brute-force koruması devre dışı
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="mdi mdi-clock-outline status-icon"></i>
+                                Oturum Ayarları
+                            </h6>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <small class="text-muted">Oturum Süresi:</small>
+                                    <div><strong>{{ session_timeout }} dakika</strong></div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <small class="text-muted">Güvenlik:</small>
+                                    <div>
+                                        <span class="badge bg-info">HttpOnly</span>
+                                        <span class="badge bg-info">SameSite</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="mdi mdi-account-key status-icon"></i>
+                                Authentication Backends
+                            </h6>
+                            <ul class="list-unstyled mb-0">
+                                {% for backend in authentication_backends %}
+                                    <li class="mb-1">
+                                        {% if 'ldap' in backend|lower %}
+                                            <i class="mdi mdi-server-network text-primary"></i>
+                                        {% else %}
+                                            <i class="mdi mdi-account text-secondary"></i>
+                                        {% endif %}
+                                        <code class="small">{{ backend }}</code>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <a href="{% url 'authentication:login' %}" class="btn btn-primary me-2">
+                            <i class="mdi mdi-login"></i> Giriş Sayfası
+                        </a>
+                        <button class="btn btn-outline-secondary" onclick="location.reload()">
+                            <i class="mdi mdi-refresh"></i> Yenile
+                        </button>
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <small class="text-muted">
+                            <i class="mdi mdi-information"></i>
+                            Son güncelleme: <span id="current-time"></span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script src="{% static 'assets/libs/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'assets/libs/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'assets/js/app.js' %}"></script>
+    
+    <script>
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleString('tr-TR');
+        }
+        
+        // Update time on load and every minute
+        updateTime();
+        setInterval(updateTime, 60000);
+        
+        // Auto refresh every 5 minutes
+        setTimeout(function() {
+            location.reload();
+        }, 300000);
+    </script>
+
+</body>
+</html>

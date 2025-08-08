@@ -1,0 +1,377 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.detail-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.info-card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid #e3ebf0;
+    transition: all 0.3s ease;
+}
+
+.info-card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.status-badge {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+}
+
+.status-current {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    animation: pulse 2s infinite;
+}
+
+.status-future {
+    background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+}
+
+.status-past {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.contact-btn {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.contact-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(79, 172, 254, 0.3);
+    color: white;
+}
+
+.back-btn {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(245, 87, 108, 0.3);
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 font-size-18">{{ page_title }}</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Ana Sayfa</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'nobetci:nobetci_list' %}">Nöbet Listesi</a></li>
+                        <li class="breadcrumb-item active">Detay</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Detail Card -->
+    <div class="row">
+        <div class="col-12">
+            <div class="detail-card text-center">
+                <div class="row align-items-center">
+                    <div class="col-md-2">
+                        <div class="avatar-lg mx-auto">
+                            <span class="avatar-title rounded-circle bg-white text-primary display-4">
+                                {{ nobetci.ad_soyad|first|upper }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-md-start mt-3 mt-md-0">
+                        <h2 class="mb-2">{{ nobetci.ad_soyad }}</h2>
+                        <h4 class="mb-3">{{ nobetci.tarih|date:"d F Y, l" }}</h4>
+                        <div class="mb-2">
+                            {% if nobetci.is_today %}
+                                <span class="badge status-badge status-current text-white">
+                                    <i class="bx bx-time me-2"></i>Bugünkü Nöbetçi
+                                </span>
+                            {% elif nobetci.is_future %}
+                                <span class="badge status-badge status-future text-white">
+                                    <i class="bx bx-calendar-plus me-2"></i>{{ nobetci.days_until }} Gün Sonra
+                                </span>
+                            {% else %}
+                                <span class="badge status-badge status-past text-white">
+                                    <i class="bx bx-calendar-minus me-2"></i>{{ nobetci.days_ago }} Gün Önce
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
+                            {% if nobetci.telefon %}
+                            <a href="tel:{{ nobetci.telefon }}" class="btn contact-btn">
+                                <i class="bx bx-phone me-2"></i>Ara
+                            </a>
+                            {% endif %}
+                            {% if nobetci.email %}
+                            <a href="mailto:{{ nobetci.email }}" class="btn contact-btn">
+                                <i class="bx bx-envelope me-2"></i>E-posta
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Information -->
+    <div class="row">
+        <!-- Contact Information -->
+        <div class="col-md-6">
+            <div class="card info-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="bx bx-user-circle text-primary me-2"></i>İletişim Bilgileri
+                    </h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="d-flex align-items-center p-3 bg-light rounded">
+                                <div class="flex-shrink-0">
+                                    <i class="bx bx-user text-primary fs-4"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">Ad Soyad</h6>
+                                    <p class="mb-0 text-muted">{{ nobetci.ad_soyad }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="d-flex align-items-center p-3 bg-light rounded">
+                                <div class="flex-shrink-0">
+                                    <i class="bx bx-phone text-success fs-4"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">Telefon</h6>
+                                    {% if nobetci.telefon %}
+                                        <p class="mb-0">
+                                            <a href="tel:{{ nobetci.telefon }}" class="text-decoration-none">
+                                                {{ nobetci.telefon }}
+                                            </a>
+                                        </p>
+                                    {% else %}
+                                        <p class="mb-0 text-muted">Telefon bilgisi yok</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="d-flex align-items-center p-3 bg-light rounded">
+                                <div class="flex-shrink-0">
+                                    <i class="bx bx-envelope text-info fs-4"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">E-posta</h6>
+                                    {% if nobetci.email %}
+                                        <p class="mb-0">
+                                            <a href="mailto:{{ nobetci.email }}" class="text-decoration-none">
+                                                {{ nobetci.email }}
+                                            </a>
+                                        </p>
+                                    {% else %}
+                                        <p class="mb-0 text-muted">E-posta bilgisi yok</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Duty Information -->
+        <div class="col-md-6">
+            <div class="card info-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="bx bx-calendar-check text-primary me-2"></i>Nöbet Bilgileri
+                    </h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="d-flex align-items-center p-3 bg-light rounded">
+                                <div class="flex-shrink-0">
+                                    <i class="bx bx-calendar text-primary fs-4"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">Nöbet Tarihi</h6>
+                                    <p class="mb-0">{{ nobetci.tarih|date:"d F Y, l" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="d-flex align-items-center p-3 bg-light rounded">
+                                <div class="flex-shrink-0">
+                                    <i class="bx bx-data text-warning fs-4"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">Veri Kaynağı</h6>
+                                    <p class="mb-0">{{ nobetci.kaynak|default:"Manuel Giriş" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="d-flex align-items-center p-3 bg-light rounded">
+                                <div class="flex-shrink-0">
+                                    <i class="bx bx-time text-info fs-4"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">Senkronizasyon</h6>
+                                    <p class="mb-0">
+                                        {% if nobetci.senkron_tarihi %}
+                                            {{ nobetci.senkron_tarihi|date:"d.m.Y H:i" }}
+                                        {% else %}
+                                            Bilinmiyor
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if nobetci.notlar %}
+                        <div class="col-12">
+                            <div class="p-3 bg-light rounded">
+                                <h6 class="mb-2">
+                                    <i class="bx bx-note text-secondary me-2"></i>Notlar
+                                </h6>
+                                <p class="mb-0 text-muted">{{ nobetci.notlar }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{% url 'nobetci:nobetci_list' %}" class="btn back-btn me-3">
+                <i class="bx bx-arrow-back me-2"></i>Listeye Dön
+            </a>
+            
+            {% if nobetci.telefon %}
+            <a href="tel:{{ nobetci.telefon }}" class="btn contact-btn me-3">
+                <i class="bx bx-phone me-2"></i>Telefon Et
+            </a>
+            {% endif %}
+            
+            {% if nobetci.email %}
+            <a href="mailto:{{ nobetci.email }}" class="btn contact-btn">
+                <i class="bx bx-envelope me-2"></i>E-posta Gönder
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    {% if nobetci.is_today %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-success d-flex align-items-center" role="alert">
+                <i class="bx bx-info-circle fs-4 me-3"></i>
+                <div>
+                    <h6 class="alert-heading mb-1">Bugünkü Nöbetçi</h6>
+                    <p class="mb-0">Bu kişi bugün nöbetçidir. Acil durumlar için iletişime geçebilirsiniz.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif nobetci.is_future %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info d-flex align-items-center" role="alert">
+                <i class="bx bx-calendar-plus fs-4 me-3"></i>
+                <div>
+                    <h6 class="alert-heading mb-1">Gelecek Nöbet</h6>
+                    <p class="mb-0">Bu nöbet {{ nobetci.days_until }} gün sonra başlayacak.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Smooth animations
+    $('.info-card').each(function(index) {
+        $(this).delay(index * 100).fadeIn(500);
+    });
+
+    // Copy to clipboard functionality
+    function copyToClipboard(text, element) {
+        navigator.clipboard.writeText(text).then(function() {
+            // Show success feedback
+            const originalText = element.innerHTML;
+            element.innerHTML = '<i class="bx bx-check me-2"></i>Kopyalandı!';
+            element.classList.add('btn-success');
+            
+            setTimeout(function() {
+                element.innerHTML = originalText;
+                element.classList.remove('btn-success');
+            }, 2000);
+        });
+    }
+
+    // Add copy buttons for contact info
+    {% if nobetci.telefon %}
+    $('a[href^="tel:"]').after(' <button class="btn btn-sm btn-outline-secondary ms-2 copy-btn" data-text="{{ nobetci.telefon|escapejs }}"><i class="bx bx-copy"></i></button>');
+    {% endif %}
+    
+    {% if nobetci.email %}
+    $('a[href^="mailto:"]').after(' <button class="btn btn-sm btn-outline-secondary ms-2 copy-btn" data-text="{{ nobetci.email|escapejs }}"><i class="bx bx-copy"></i></button>');
+    {% endif %}
+
+    // Copy button click handler
+    $('.copy-btn').on('click', function() {
+        const text = $(this).data('text');
+        copyToClipboard(text, this);
+    });
+});
+</script>
+{% endblock %}

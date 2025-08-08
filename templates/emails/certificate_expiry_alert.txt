@@ -1,0 +1,62 @@
+PORTALL SERTİFİKA SÜRE UYARISI
+{{ "=" * 50 }}
+
+{% if alert_type == 'expired' %}
+ACİL DURUM! Bu sertifikanın süresi dolmuş durumda.
+{% elif alert_type == 'expiring_7' %}
+UYARI! Bu sertifikanın süresi 7 gün içinde dolacak.
+{% else %}
+BİLGİ: Bu sertifikanın süresi 30 gün içinde dolacak.
+{% endif %}
+
+SERTİFİKA DETAYLARI
+{{ "-" * 20 }}
+
+Common Name: {{ certificate.common_name }}
+Sunucu: {{ certificate.server_hostname }}
+{% if certificate.application_name or certificate.java_application %}
+Uygulama: {{ certificate.application_name|default:certificate.java_application }}
+{% endif %}
+Ortam: {{ certificate.environment|default:"Belirtilmemiş" }}
+Sertifika Tipi: {% if certificate.certificate_type == 'kdb' %}KDB{% else %}Java{% endif %}
+
+Başlangıç Tarihi: {{ certificate.valid_from|date:"d.m.Y H:i" }}
+Bitiş Tarihi: {{ certificate.valid_to|date:"d.m.Y H:i" }}
+{% with days=certificate.days_until_expiry %}
+{% if days < 0 %}
+Durum: {{ days|floatformat:0|slice:"1:" }} gün önce dolmuş (ACİL!)
+{% else %}
+Kalan Süre: {{ days }} gün
+{% endif %}
+{% endwith %}
+
+{% if certificate.serial_number %}
+Serial Number: {{ certificate.serial_number }}
+{% endif %}
+{% if certificate.issuer %}
+Issuer: {{ certificate.issuer }}
+{% endif %}
+
+YAPILMASI GEREKENLER
+{{ "-" * 20 }}
+
+1. Sertifika yenileme sürecini başlatın
+2. İlgili uygulama ekipleriyle koordine olun
+3. Yenileme sonrası deployment planını hazırlayın
+4. Test ortamında önce yenileme işlemini deneyin
+
+LİNKLER
+{{ "-" * 20 }}
+
+Sertifika Detayı: {{ portal_url }}{% if certificate.certificate_type == 'kdb' %}{% url 'sertifikalar:kdb_detail' certificate.id %}{% else %}{% url 'sertifikalar:java_detail' certificate.id %}{% endif %}
+
+Sertifika Dashboard: {{ portal_url }}{% url 'sertifikalar:dashboard' %}
+
+Portall Ana Sayfa: {{ portal_url }}
+
+{{ "=" * 50 }}
+Bu e-posta Portall Sertifika Yönetim Sistemi tarafından 
+otomatik olarak gönderilmiştir.
+
+Gönderim Zamanı: {{ notification.sent_at|date:"d.m.Y H:i" }}
+{{ "=" * 50 }}

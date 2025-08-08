@@ -1,0 +1,49 @@
+YENİ DUYURU - {{ announcement.get_duyuru_tipi_display|upper }}
+{{ "=" * 60 }}
+
+{{ announcement.title }}
+{{ "-" * announcement.title|length }}
+
+DUYURU BİLGİLERİ
+{{ "-" * 20 }}
+
+Kategori: {{ announcement.category.name }}
+Önem Seviyesi: {{ announcement.get_onem_seviyesi_display }}
+{% if announcement.ilgili_urun %}İlgili Ürün/Sistem: {{ announcement.ilgili_urun }}{% endif %}
+Yayın Tarihi: {{ announcement.published_at|date:"d.m.Y H:i" }}
+{% if announcement.yayin_bitis_tarihi %}Geçerlilik Süresi: {{ announcement.yayin_bitis_tarihi|date:"d.m.Y H:i" }} tarihine kadar{% endif %}
+
+{% if announcement.calisma_tarihi %}
+PLANLI ÇALIŞMA TARİHİ
+{{ "-" * 25 }}
+
+🗓️  {{ announcement.calisma_tarihi|date:"d.m.Y H:i" }}
+
+Bu duyuru ile ilgili çalışma yukarıdaki tarihte gerçekleştirilecektir.
+
+{% endif %}
+{% if announcement.summary %}
+ÖZET
+{{ "-" * 5 }}
+
+{{ announcement.summary }}
+
+{% endif %}
+DUYURU İÇERİĞİ
+{{ "-" * 15 }}
+
+{{ announcement.content|striptags|safe }}
+
+LİNKLER
+{{ "-" * 8 }}
+
+Duyuruyu Görüntüle: {{ site_url }}{{ announcement.get_absolute_url }}
+Tüm Duyurular: {{ site_url }}/duyurular/
+Portall Ana Sayfa: {{ site_url }}/
+
+{{ "=" * 60 }}
+Bu e-posta Portall Duyuru Sistemi tarafından otomatik olarak 
+gönderilmiştir.
+
+Tarih: {{ announcement.published_at|date:"d.m.Y H:i" }}
+{{ "=" * 60 }}

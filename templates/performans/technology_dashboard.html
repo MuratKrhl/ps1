@@ -1,0 +1,631 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ technology_name }} Performance - Portall{% endblock %}
+
+{% block extra_css %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- ApexCharts -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<style>
+.metric-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.chart-container {
+    position: relative;
+    height: 350px;
+}
+.time-range-selector {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 8px;
+}
+.time-range-btn {
+    border: none;
+    background: transparent;
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin: 0 2px;
+    transition: all 0.2s;
+}
+.time-range-btn.active {
+    background: #007bff;
+    color: white;
+}
+.time-range-btn:hover {
+    background: #e9ecef;
+}
+.time-range-btn.active:hover {
+    background: #0056b3;
+}
+.entity-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    margin: 2px;
+}
+.problem-item {
+    border-left: 4px solid #dc3545;
+    background: #f8f9fa;
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 0 4px 4px 0;
+}
+.problem-item.warning {
+    border-left-color: #ffc107;
+}
+.problem-item.info {
+    border-left-color: #17a2b8;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">
+                        <i class="ri-dashboard-3-line me-2"></i>{{ technology_name }} Performance Dashboard
+                    </h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'performans:dashboard' %}">Performance</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'performans:performance_overview' %}">Overview</a></li>
+                            <li class="breadcrumb-item active">{{ technology_name }}</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technology Selector -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <h6 class="mb-0 me-3">Teknoloji Seçin:</h6>
+                                <div class="btn-group" role="group">
+                                    {% for tech in supported_technologies %}
+                                    <a href="{% url 'performans:technology_dashboard' tech %}" 
+                                       class="btn btn-sm {% if tech == technology %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                                        {{ tech|upper }}
+                                    </a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="time-range-selector me-3">
+                                    <button class="time-range-btn active" data-range="1h">1 Saat</button>
+                                    <button class="time-range-btn" data-range="6h">6 Saat</button>
+                                    <button class="time-range-btn" data-range="1d">1 Gün</button>
+                                    <button class="time-range-btn" data-range="7d">7 Gün</button>
+                                </div>
+                                <button type="button" class="btn btn-success btn-sm" id="refresh-data" onclick="refreshDashboard()">
+                                    <i class="ri-refresh-line me-1"></i>Yenile
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Metrics Cards -->
+        <div class="row mb-4" id="metrics-cards">
+            <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
+                                        <i class="ri-cpu-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h4 class="mb-1" id="cpu-usage">-</h4>
+                                <p class="text-muted mb-0">CPU Kullanımı (%)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                                        <i class="ri-database-2-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h4 class="mb-1" id="memory-usage">-</h4>
+                                <p class="text-muted mb-0">Bellek Kullanımı (%)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
+                                        <i class="ri-time-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h4 class="mb-1" id="response-time">-</h4>
+                                <p class="text-muted mb-0">Yanıt Süresi (ms)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
+                                        <i class="ri-arrow-up-down-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h4 class="mb-1" id="request-rate">-</h4>
+                                <p class="text-muted mb-0">İstek Oranı (/dk)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row mb-4">
+            <!-- Performance Chart -->
+            <div class="col-xl-8">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="card-title mb-0">
+                            <i class="ri-line-chart-line me-2"></i>Performans Trendi
+                        </h4>
+                        <div class="flex-shrink-0">
+                            <div class="dropdown">
+                                <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="ri-settings-3-line me-1"></i>Metrik
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item metric-selector" href="#" data-metric="cpu_usage">CPU Kullanımı</a></li>
+                                    <li><a class="dropdown-item metric-selector" href="#" data-metric="memory_usage">Bellek Kullanımı</a></li>
+                                    <li><a class="dropdown-item metric-selector" href="#" data-metric="response_time">Yanıt Süresi</a></li>
+                                    <li><a class="dropdown-item metric-selector" href="#" data-metric="request_rate">İstek Oranı</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="performance-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Entity Status -->
+            <div class="col-xl-4">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="card-title mb-0">
+                            <i class="ri-server-line me-2"></i>Servis Durumu
+                        </h4>
+                        <span class="badge bg-primary" id="entity-count">0</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="entities-list">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="text-muted mt-2">Servisler yükleniyor...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Problems Section -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="card-title mb-0">
+                            <i class="ri-error-warning-line me-2"></i>Aktif Problemler
+                        </h4>
+                        <div class="flex-shrink-0">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-danger problem-filter active" data-severity="AVAILABILITY">Kritik</button>
+                                <button type="button" class="btn btn-outline-warning problem-filter" data-severity="PERFORMANCE">Performans</button>
+                                <button type="button" class="btn btn-outline-info problem-filter" data-severity="ERROR">Hata</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="problems-list">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="text-muted mt-2">Problemler yükleniyor...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global variables
+let currentTechnology = '{{ technology }}';
+let currentTimeRange = '1h';
+let currentMetric = 'cpu_usage';
+let currentSeverity = 'AVAILABILITY';
+let performanceChart = null;
+
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    initializeEventListeners();
+    loadDashboardData();
+    
+    // Auto refresh every 2 minutes
+    setInterval(loadDashboardData, 120000);
+});
+
+// Initialize event listeners
+function initializeEventListeners() {
+    // Time range selector
+    document.querySelectorAll('.time-range-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.time-range-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentTimeRange = this.dataset.range;
+            loadDashboardData();
+        });
+    });
+    
+    // Metric selector
+    document.querySelectorAll('.metric-selector').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentMetric = this.dataset.metric;
+            loadPerformanceChart();
+        });
+    });
+    
+    // Problem filter
+    document.querySelectorAll('.problem-filter').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.problem-filter').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentSeverity = this.dataset.severity;
+            loadProblems();
+        });
+    });
+}
+
+// Load all dashboard data
+function loadDashboardData() {
+    loadMetrics();
+    loadEntities();
+    loadProblems();
+    loadPerformanceChart();
+}
+
+// Load metrics data
+function loadMetrics() {
+    fetch(`/performans/api/technology/${currentTechnology}/metrics/?time_range=${currentTimeRange}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateMetricsCards(data.metrics);
+        } else {
+            console.error('Error loading metrics:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error loading metrics:', error);
+    });
+}
+
+// Update metrics cards
+function updateMetricsCards(metrics) {
+    const metricElements = {
+        'cpu_usage': document.getElementById('cpu-usage'),
+        'memory_usage': document.getElementById('memory-usage'),
+        'response_time': document.getElementById('response-time'),
+        'request_rate': document.getElementById('request-rate')
+    };
+    
+    Object.keys(metricElements).forEach(metricName => {
+        const element = metricElements[metricName];
+        if (element && metrics[metricName]) {
+            const value = metrics[metricName].value;
+            const unit = metrics[metricName].unit;
+            
+            let displayValue = '-';
+            if (value !== undefined && value !== null) {
+                if (metricName === 'cpu_usage' || metricName === 'memory_usage') {
+                    displayValue = Math.round(value) + '%';
+                } else if (metricName === 'response_time') {
+                    displayValue = Math.round(value) + ' ms';
+                } else if (metricName === 'request_rate') {
+                    displayValue = Math.round(value) + '/dk';
+                } else {
+                    displayValue = Math.round(value) + (unit ? ' ' + unit : '');
+                }
+            }
+            
+            element.textContent = displayValue;
+        }
+    });
+}
+
+// Load entities
+function loadEntities() {
+    fetch(`/performans/api/technology/${currentTechnology}/entities/`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateEntitiesList(data.entities);
+            document.getElementById('entity-count').textContent = data.count;
+        } else {
+            console.error('Error loading entities:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error loading entities:', error);
+    });
+}
+
+// Update entities list
+function updateEntitiesList(entities) {
+    const container = document.getElementById('entities-list');
+    
+    if (entities.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <i class="ri-server-line text-muted" style="font-size: 3rem;"></i>
+                <h6 class="mt-3 text-muted">Servis Bulunamadı</h6>
+                <p class="text-muted">Bu teknoloji için aktif servis bulunamadı.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    entities.forEach(entity => {
+        html += `
+            <div class="entity-badge">
+                <i class="ri-server-line me-1"></i>
+                ${entity.name}
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Load problems
+function loadProblems() {
+    fetch(`/performans/api/technology/${currentTechnology}/problems/?severity=${currentSeverity}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateProblemsList(data.problems);
+        } else {
+            console.error('Error loading problems:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error loading problems:', error);
+    });
+}
+
+// Update problems list
+function updateProblemsList(problems) {
+    const container = document.getElementById('problems-list');
+    
+    if (problems.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <i class="ri-check-double-line text-success" style="font-size: 3rem;"></i>
+                <h6 class="mt-3 text-success">Problem Yok</h6>
+                <p class="text-muted">Bu teknoloji için aktif problem bulunmuyor.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    problems.forEach(problem => {
+        const severityClass = problem.severity === 'AVAILABILITY' ? '' : 
+                             problem.severity === 'PERFORMANCE' ? 'warning' : 'info';
+        
+        const startTime = new Date(problem.start_time).toLocaleString('tr-TR');
+        
+        html += `
+            <div class="problem-item ${severityClass}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="mb-1">${problem.title}</h6>
+                        <p class="text-muted mb-2 small">
+                            <i class="ri-time-line me-1"></i>
+                            Başlangıç: ${startTime}
+                        </p>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-${severityClass === '' ? 'danger' : severityClass === 'warning' ? 'warning' : 'info'} me-2">
+                                ${problem.severity}
+                            </span>
+                            <span class="badge bg-secondary">
+                                ${problem.status}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted">
+                            ${problem.affected_entities.length} servis etkilendi
+                        </small>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Load performance chart
+function loadPerformanceChart() {
+    fetch(`/performans/api/technology/${currentTechnology}/metrics/?time_range=${currentTimeRange}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.metrics[currentMetric]) {
+            updatePerformanceChart(data.metrics[currentMetric]);
+        }
+    })
+    .catch(error => {
+        console.error('Error loading chart data:', error);
+    });
+}
+
+// Update performance chart
+function updatePerformanceChart(metricData) {
+    const ctx = document.getElementById('performance-chart').getContext('2d');
+    
+    if (performanceChart) {
+        performanceChart.destroy();
+    }
+    
+    const dataPoints = metricData.data_points || [];
+    const labels = dataPoints.map(point => {
+        const timestamps = point.timestamps || [];
+        if (timestamps.length > 0) {
+            return new Date(timestamps[0]).toLocaleTimeString('tr-TR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        return '';
+    });
+    
+    const values = dataPoints.map(point => {
+        const vals = point.values || [];
+        return vals.length > 0 ? vals[0] : 0;
+    });
+    
+    performanceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: getMetricLabel(currentMetric),
+                data: values,
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Get metric label
+function getMetricLabel(metric) {
+    const labels = {
+        'cpu_usage': 'CPU Kullanımı (%)',
+        'memory_usage': 'Bellek Kullanımı (%)',
+        'response_time': 'Yanıt Süresi (ms)',
+        'request_rate': 'İstek Oranı (/dk)'
+    };
+    return labels[metric] || metric;
+}
+
+// Refresh dashboard
+function refreshDashboard() {
+    const refreshBtn = document.getElementById('refresh-data');
+    refreshBtn.innerHTML = '<i class="ri-loader-4-line spin me-1"></i>Yenileniyor...';
+    refreshBtn.disabled = true;
+    
+    loadDashboardData();
+    
+    setTimeout(() => {
+        refreshBtn.innerHTML = '<i class="ri-refresh-line me-1"></i>Yenile';
+        refreshBtn.disabled = false;
+    }, 2000);
+}
+
+// Spinning animation CSS
+const style = document.createElement('style');
+style.textContent = `
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

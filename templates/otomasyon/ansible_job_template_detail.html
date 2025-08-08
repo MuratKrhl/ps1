@@ -1,0 +1,421 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}{{ job_template.name }} - Job Template{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item"><a href="{% url 'otomasyon:ansible_job_templates' %}">Ansible</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">{{ job_template.name }}</li>
+                                </ol>
+                            </nav>
+                            <h6 class="mb-0">{{ job_template.name }}</h6>
+                            {% if job_template.description %}
+                            <p class="text-sm mb-0">{{ job_template.description }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <a href="{% url 'otomasyon:ansible_job_executions' %}?search={{ job_template.name }}" class="btn btn-outline-primary btn-sm me-2">
+                                <i class="ri-history-line me-1"></i>Geçmiş
+                            </a>
+                            {% if job_template.survey_enabled %}
+                            <button class="btn btn-success btn-sm" onclick="scrollToLaunch()">
+                                <i class="ri-play-circle-line me-1"></i>Çalıştır
+                            </button>
+                            {% else %}
+                            <form method="post" action="{% url 'otomasyon:launch_job_template' job_template.pk %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Bu job template\'i çalıştırmak istediğinizden emin misiniz?')">
+                                    <i class="ri-play-circle-line me-1"></i>Çalıştır
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sol Kolon - Job Template Bilgileri -->
+        <div class="col-lg-8">
+            <!-- Genel Bilgiler -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Genel Bilgiler</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Template Adı</label>
+                                <p class="text-sm font-weight-bold mb-0">{{ job_template.name }}</p>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Proje</label>
+                                <p class="text-sm mb-0">{{ job_template.project_name|default:"N/A" }}</p>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Playbook</label>
+                                <p class="text-sm mb-0">
+                                    <i class="ri-file-code-line me-1"></i>{{ job_template.playbook|default:"N/A" }}
+                                </p>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Inventory</label>
+                                <p class="text-sm mb-0">{{ job_template.inventory_name|default:"N/A" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Kategori</label>
+                                {% if job_template.category %}
+                                <p class="text-sm mb-0">
+                                    <span class="badge badge-sm" style="background-color: {{ job_template.category.color }}20; color: {{ job_template.category.color }};">
+                                        <i class="{{ job_template.category.icon }} me-1"></i>{{ job_template.category.name }}
+                                    </span>
+                                </p>
+                                {% else %}
+                                <p class="text-sm mb-0">Kategori atanmamış</p>
+                                {% endif %}
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Job Türü</label>
+                                <p class="text-sm mb-0">
+                                    <span class="badge badge-sm bg-gradient-{% if job_template.job_type == 'run' %}success{% else %}info{% endif %}">
+                                        {{ job_template.get_job_type_display }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Verbosity</label>
+                                <p class="text-sm mb-0">{{ job_template.get_verbosity_display }}</p>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Kullanım Sayısı</label>
+                                <p class="text-sm mb-0">
+                                    <span class="badge badge-sm bg-gradient-primary">{{ job_template.usage_count }}</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Survey Parametreleri -->
+            {% if job_template.survey_enabled and survey_parameters %}
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Survey Parametreleri</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Soru</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Değişken</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tür</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Zorunlu</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Varsayılan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for param in survey_parameters %}
+                                <tr>
+                                    <td>
+                                        <p class="text-sm font-weight-bold mb-0">{{ param.question_name }}</p>
+                                        {% if param.question_description %}
+                                        <p class="text-xs text-secondary mb-0">{{ param.question_description }}</p>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <code class="text-xs">{{ param.variable }}</code>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-sm bg-gradient-info">{{ param.get_type_display }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if param.required %}
+                                        <span class="badge badge-sm bg-gradient-danger">Evet</span>
+                                        {% else %}
+                                        <span class="badge badge-sm bg-gradient-secondary">Hayır</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if param.default_value %}
+                                        <code class="text-xs">{{ param.default_value|truncatechars:20 }}</code>
+                                        {% else %}
+                                        <span class="text-xs text-secondary">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Launch Parametreleri -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Launch Ayarları</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" {% if job_template.ask_variables_on_launch %}checked{% endif %} disabled>
+                                <label class="form-check-label text-sm">Extra Variables</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" {% if job_template.ask_limit_on_launch %}checked{% endif %} disabled>
+                                <label class="form-check-label text-sm">Host Limit</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" {% if job_template.ask_tags_on_launch %}checked{% endif %} disabled>
+                                <label class="form-check-label text-sm">Job Tags</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" {% if job_template.ask_skip_tags_on_launch %}checked{% endif %} disabled>
+                                <label class="form-check-label text-sm">Skip Tags</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" {% if job_template.ask_job_type_on_launch %}checked{% endif %} disabled>
+                                <label class="form-check-label text-sm">Job Type</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" {% if job_template.ask_verbosity_on_launch %}checked{% endif %} disabled>
+                                <label class="form-check-label text-sm">Verbosity</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" {% if job_template.ask_inventory_on_launch %}checked{% endif %} disabled>
+                                <label class="form-check-label text-sm">Inventory</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" {% if job_template.ask_credential_on_launch %}checked{% endif %} disabled>
+                                <label class="form-check-label text-sm">Credential</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Çalıştırma Formu -->
+            {% if job_template.survey_enabled or job_template.ask_variables_on_launch or job_template.ask_limit_on_launch or job_template.ask_tags_on_launch or job_template.ask_skip_tags_on_launch or job_template.ask_job_type_on_launch or job_template.ask_verbosity_on_launch %}
+            <div class="card mb-4" id="launch">
+                <div class="card-header pb-0">
+                    <h6>Job Çalıştır</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'otomasyon:launch_job_template' job_template.pk %}" id="launchForm">
+                        {% csrf_token %}
+                        
+                        <!-- Survey Parametreleri -->
+                        {% if job_template.survey_enabled %}
+                        <h6 class="text-sm font-weight-bold mb-3">Survey Parametreleri</h6>
+                        {% for field in launch_form %}
+                            {% if field.name|slice:":7" == "survey_" %}
+                            <div class="mb-3">
+                                {{ field.label_tag }}
+                                {{ field }}
+                                {% if field.help_text %}
+                                <small class="form-text text-muted">{{ field.help_text }}</small>
+                                {% endif %}
+                                {% if field.errors %}
+                                <div class="text-danger text-xs">{{ field.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                        {% endif %}
+
+                        <!-- Launch Parametreleri -->
+                        {% if job_template.ask_variables_on_launch or job_template.ask_limit_on_launch or job_template.ask_tags_on_launch or job_template.ask_skip_tags_on_launch or job_template.ask_job_type_on_launch or job_template.ask_verbosity_on_launch %}
+                        <h6 class="text-sm font-weight-bold mb-3 mt-4">Launch Parametreleri</h6>
+                        <div class="row">
+                            {% for field in launch_form %}
+                                {% if field.name|slice:":7" != "survey_" %}
+                                <div class="col-md-6 mb-3">
+                                    {{ field.label_tag }}
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                    <div class="text-danger text-xs">{{ field.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="button" class="btn btn-outline-secondary me-2" onclick="resetForm()">
+                                <i class="ri-refresh-line me-1"></i>Sıfırla
+                            </button>
+                            <button type="submit" class="btn btn-success" onclick="return confirmLaunch()">
+                                <i class="ri-play-circle-line me-1"></i>Job'u Başlat
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sağ Kolon - İstatistikler ve Son Çalıştırmalar -->
+        <div class="col-lg-4">
+            <!-- İstatistikler -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>İstatistikler</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-sm">Toplam Çalıştırma</span>
+                        <span class="badge badge-sm bg-gradient-primary">{{ job_template.usage_count }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-sm">Son Kullanım</span>
+                        <span class="text-xs text-secondary">
+                            {% if job_template.last_used %}
+                                {{ job_template.last_used|date:"d.m.Y H:i" }}
+                            {% else %}
+                                Hiç kullanılmadı
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-sm">Son Senkronizasyon</span>
+                        <span class="text-xs text-secondary">{{ job_template.last_sync|date:"d.m.Y H:i" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-sm">Tower ID</span>
+                        <span class="text-xs"><code>{{ job_template.tower_id }}</code></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Son Çalıştırmalar -->
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>Son Çalıştırmalar</h6>
+                        <a href="{% url 'otomasyon:ansible_job_executions' %}?search={{ job_template.name }}" class="text-xs">
+                            Tümünü Gör <i class="ri-arrow-right-line"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_executions %}
+                    <div class="timeline timeline-one-side">
+                        {% for execution in recent_executions %}
+                        <div class="timeline-block mb-3">
+                            <span class="timeline-step">
+                                <i class="ri-{% if execution.is_successful %}check{% elif execution.is_failed %}close{% elif execution.is_running %}play{% else %}time{% endif %}-line text-{% if execution.is_successful %}success{% elif execution.is_failed %}danger{% elif execution.is_running %}primary{% else %}warning{% endif %}"></i>
+                            </span>
+                            <div class="timeline-content">
+                                <h6 class="text-dark text-sm font-weight-bold mb-0">
+                                    <a href="{% url 'otomasyon:ansible_job_execution_detail' execution.pk %}" class="text-decoration-none">
+                                        {{ execution.execution_id|slice:":8" }}...
+                                    </a>
+                                </h6>
+                                <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">
+                                    {{ execution.executor.get_full_name|default:execution.executor.username }}
+                                </p>
+                                <p class="text-xs mt-1 mb-0">
+                                    <span class="badge badge-sm bg-gradient-{{ execution.get_status_display_class }}">
+                                        {{ execution.get_status_display }}
+                                    </span>
+                                    <span class="text-secondary ms-2">{{ execution.created_at|date:"d.m.Y H:i" }}</span>
+                                </p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="ri-history-line text-muted" style="font-size: 2rem;"></i>
+                        <p class="text-sm text-secondary mt-2 mb-0">Henüz çalıştırma yok</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function scrollToLaunch() {
+    document.getElementById('launch').scrollIntoView({ 
+        behavior: 'smooth' 
+    });
+}
+
+function resetForm() {
+    document.getElementById('launchForm').reset();
+}
+
+function confirmLaunch() {
+    return confirm('Bu job template\'i çalıştırmak istediğinizden emin misiniz?');
+}
+
+// Form validation
+$(document).ready(function() {
+    $('#launchForm').on('submit', function(e) {
+        let isValid = true;
+        let errorMessage = '';
+        
+        // Required field validation
+        $(this).find('input[required], select[required], textarea[required]').each(function() {
+            if (!$(this).val()) {
+                isValid = false;
+                $(this).addClass('is-invalid');
+                errorMessage = 'Lütfen tüm zorunlu alanları doldurun.';
+            } else {
+                $(this).removeClass('is-invalid');
+            }
+        });
+        
+        // JSON validation for extra_vars
+        const extraVarsField = $('textarea[name="extra_vars"]');
+        if (extraVarsField.length && extraVarsField.val()) {
+            try {
+                JSON.parse(extraVarsField.val());
+                extraVarsField.removeClass('is-invalid');
+            } catch (e) {
+                isValid = false;
+                extraVarsField.addClass('is-invalid');
+                errorMessage = 'Extra Variables alanı geçerli bir JSON formatında olmalıdır.';
+            }
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert(errorMessage);
+            return false;
+        }
+        
+        return confirmLaunch();
+    });
+});
+</script>
+{% endblock %}

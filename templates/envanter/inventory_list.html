@@ -1,0 +1,428 @@
+{% extends "layouts/main.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header with Stats -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">{{ page_title }}</h6>
+                        <div class="d-flex gap-2">
+                            {% if perms.envanter.add_application %}
+                            <a href="{% url 'envanter:application_create' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-1"></i>Yeni Uygulama
+                            </a>
+                            {% endif %}
+                            <button class="btn btn-info btn-sm" onclick="refreshHealthChecks()">
+                                <i class="fas fa-sync me-1"></i>Sağlık Kontrol
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Stats -->
+                <div class="card-body pt-2">
+                    <div class="row">
+                        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+                            <div class="card">
+                                <div class="card-body p-3">
+                                    <div class="row">
+                                        <div class="col-8">
+                                            <div class="numbers">
+                                                <p class="text-sm mb-0 text-capitalize font-weight-bold">Toplam Sunucu</p>
+                                                <h5 class="font-weight-bolder mb-0">{{ stats.total_servers }}</h5>
+                                            </div>
+                                        </div>
+                                        <div class="col-4 text-end">
+                                            <div class="icon icon-shape bg-gradient-primary shadow text-center border-radius-md">
+                                                <i class="fas fa-server text-lg opacity-10"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+                            <div class="card">
+                                <div class="card-body p-3">
+                                    <div class="row">
+                                        <div class="col-8">
+                                            <div class="numbers">
+                                                <p class="text-sm mb-0 text-capitalize font-weight-bold">Toplam Uygulama</p>
+                                                <h5 class="font-weight-bolder mb-0">{{ stats.total_applications }}</h5>
+                                            </div>
+                                        </div>
+                                        <div class="col-4 text-end">
+                                            <div class="icon icon-shape bg-gradient-success shadow text-center border-radius-md">
+                                                <i class="fas fa-cube text-lg opacity-10"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+                            <div class="card">
+                                <div class="card-body p-3">
+                                    <div class="row">
+                                        <div class="col-8">
+                                            <div class="numbers">
+                                                <p class="text-sm mb-0 text-capitalize font-weight-bold">Aktif Öğeler</p>
+                                                <h5 class="font-weight-bolder mb-0">{{ stats.active_applications }}</h5>
+                                            </div>
+                                        </div>
+                                        <div class="col-4 text-end">
+                                            <div class="icon icon-shape bg-gradient-info shadow text-center border-radius-md">
+                                                <i class="fas fa-check-circle text-lg opacity-10"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-sm-6">
+                            <div class="card">
+                                <div class="card-body p-3">
+                                    <div class="row">
+                                        <div class="col-8">
+                                            <div class="numbers">
+                                                <p class="text-sm mb-0 text-capitalize font-weight-bold">Sorunlu</p>
+                                                <h5 class="font-weight-bolder mb-0">{{ stats.error_applications }}</h5>
+                                            </div>
+                                        </div>
+                                        <div class="col-4 text-end">
+                                            <div class="icon icon-shape bg-gradient-warning shadow text-center border-radius-md">
+                                                <i class="fas fa-exclamation-triangle text-lg opacity-10"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Arama</label>
+                            <input type="text" name="search" class="form-control" placeholder="Ad, IP, açıklama..." 
+                                   value="{{ search_query }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Tip</label>
+                            <select name="type" class="form-select">
+                                <option value="all" {% if type_filter == 'all' %}selected{% endif %}>Tümü</option>
+                                <option value="servers" {% if type_filter == 'servers' %}selected{% endif %}>Sunucular</option>
+                                <option value="applications" {% if type_filter == 'applications' %}selected{% endif %}>Uygulamalar</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Ortam</label>
+                            <select name="environment" class="form-select">
+                                <option value="">Tüm Ortamlar</option>
+                                {% for env in environments %}
+                                <option value="{{ env.id }}" {% if environment_filter == env.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ env.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Durum</label>
+                            <select name="status" class="form-select">
+                                <option value="">Tüm Durumlar</option>
+                                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Aktif</option>
+                                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Pasif</option>
+                                <option value="error" {% if status_filter == 'error' %}selected{% endif %}>Hatalı</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-search me-1"></i>Ara
+                            </button>
+                            <a href="{% url 'envanter:inventory_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6>Envanter Öğeleri ({{ page_obj.paginator.count }} öğe)</h6>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Öğe</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Ortam</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Durum</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">IP/Port</th>
+                                    <th class="text-secondary opacity-7"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in page_obj %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex px-2 py-1">
+                                            <div>
+                                                {% if item.type == 'server' %}
+                                                <div class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-dark">
+                                                    <i class="fas fa-server text-white opacity-10"></i>
+                                                </div>
+                                                {% else %}
+                                                <div class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-info">
+                                                    <i class="fas fa-cube text-white opacity-10"></i>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="d-flex flex-column justify-content-center ms-3">
+                                                <h6 class="mb-0 text-sm">{{ item.name }}</h6>
+                                                <p class="text-xs text-secondary mb-0">{{ item.description }}</p>
+                                                {% if item.type == 'server' %}
+                                                <span class="badge badge-sm bg-gradient-secondary">Sunucu</span>
+                                                {% else %}
+                                                <span class="badge badge-sm bg-gradient-info">Uygulama</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">{{ item.environment.name }}</p>
+                                        <p class="text-xs text-secondary mb-0">{{ item.environment.description|default:"" }}</p>
+                                    </td>
+                                    <td class="align-middle text-center text-sm">
+                                        {% if item.status == 'active' %}
+                                        <span class="badge badge-sm bg-gradient-success">Aktif</span>
+                                        {% elif item.status == 'inactive' %}
+                                        <span class="badge badge-sm bg-gradient-secondary">Pasif</span>
+                                        {% elif item.status == 'error' %}
+                                        <span class="badge badge-sm bg-gradient-danger">Hatalı</span>
+                                        {% else %}
+                                        <span class="badge badge-sm bg-gradient-warning">{{ item.status|title }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        <span class="text-secondary text-xs font-weight-bold">
+                                            {{ item.ip_address|default:"N/A" }}
+                                            {% if item.port %}:{{ item.port }}{% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="dropdown">
+                                            <button class="btn btn-link text-secondary mb-0" data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-v text-xs"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                {% if item.type == 'server' %}
+                                                <li><a class="dropdown-item" href="{% url 'envanter:server_detail' item.id %}">
+                                                    <i class="fas fa-eye me-2"></i>Detay
+                                                </a></li>
+                                                {% else %}
+                                                <li><a class="dropdown-item" href="{% url 'envanter:application_detail' item.id %}">
+                                                    <i class="fas fa-eye me-2"></i>Detay
+                                                </a></li>
+                                                {% if item.port %}
+                                                <li><a class="dropdown-item" href="#" onclick="checkHealth({{ item.id }})">
+                                                    <i class="fas fa-heartbeat me-2"></i>Sağlık Kontrol
+                                                </a></li>
+                                                {% endif %}
+                                                {% if perms.envanter.change_application %}
+                                                <li><a class="dropdown-item" href="{% url 'envanter:application_update' item.id %}">
+                                                    <i class="fas fa-edit me-2"></i>Düzenle
+                                                </a></li>
+                                                {% endif %}
+                                                {% if perms.envanter.delete_application %}
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-danger" href="{% url 'envanter:application_delete' item.id %}">
+                                                    <i class="fas fa-trash me-2"></i>Sil
+                                                </a></li>
+                                                {% endif %}
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="text-center">
+                                            <i class="fas fa-inbox fa-3x text-secondary mb-3"></i>
+                                            <h5 class="text-secondary">Envanter öğesi bulunamadı</h5>
+                                            <p class="text-sm text-secondary">Arama kriterlerinizi değiştirmeyi deneyin.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <div class="card-footer">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Health Check Modal -->
+<div class="modal fade" id="healthCheckModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sağlık Kontrol Sonucu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="healthCheckResult">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Kontrol ediliyor...</span>
+                    </div>
+                    <p class="mt-2">Sağlık kontrolü yapılıyor...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function checkHealth(appId) {
+    const modal = new bootstrap.Modal(document.getElementById('healthCheckModal'));
+    const resultDiv = document.getElementById('healthCheckResult');
+    
+    // Show loading
+    resultDiv.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Kontrol ediliyor...</span>
+            </div>
+            <p class="mt-2">Sağlık kontrolü yapılıyor...</p>
+        </div>
+    `;
+    
+    modal.show();
+    
+    // Make AJAX request
+    fetch(`/envanter/ajax/uygulama/${appId}/saglik-kontrol/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const badgeClass = data.badge_class || 'bg-secondary';
+                const statusText = data.status === 'healthy' ? 'Sağlıklı' : 
+                                 data.status === 'unhealthy' ? 'Sağlıksız' : 'Bilinmiyor';
+                const iconClass = data.status === 'healthy' ? 'fa-check-circle text-success' : 
+                                 data.status === 'unhealthy' ? 'fa-times-circle text-danger' : 
+                                 'fa-question-circle text-warning';
+                
+                resultDiv.innerHTML = `
+                    <div class="text-center">
+                        <i class="fas ${iconClass} fa-3x mb-3"></i>
+                        <h5>Durum: <span class="badge ${badgeClass}">${statusText}</span></h5>
+                        ${data.last_check ? `<p class="text-sm text-secondary">Son kontrol: ${new Date(data.last_check).toLocaleString('tr-TR')}</p>` : ''}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <h5>Hata</h5>
+                        <p class="text-danger">${data.error}</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            resultDiv.innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                    <h5>Bağlantı Hatası</h5>
+                    <p class="text-danger">Sağlık kontrolü yapılamadı.</p>
+                </div>
+            `;
+        });
+}
+
+function refreshHealthChecks() {
+    // This could trigger a background task to check all applications
+    // For now, just show a toast notification
+    showToast('Sağlık kontrolleri başlatıldı', 'info');
+}
+
+function showToast(message, type = 'info') {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

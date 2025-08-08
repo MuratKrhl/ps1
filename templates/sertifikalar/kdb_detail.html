@@ -1,0 +1,455 @@
+{% extends "layouts/main.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">{{ page_title }}</h6>
+                            <p class="text-sm mb-0">{{ certificate.common_name }}</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'sertifikalar:kdb_list' %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-arrow-left me-1"></i>Liste
+                            </a>
+                            <a href="{% url 'sertifikalar:dashboard' %}" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Certificate Status Alert -->
+    <div class="row mb-4">
+        <div class="col-12">
+            {% with days=certificate.days_until_expiry %}
+            {% if days < 0 %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <span class="alert-icon"><i class="fas fa-times-circle"></i></span>
+                <span class="alert-text"><strong>Dikkat!</strong> Bu sertifikanın süresi {{ days|floatformat:0|slice:"1:" }} gün önce dolmuş. Acil müdahale gerekiyor!</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            {% elif days <= 7 %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <span class="alert-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                <span class="alert-text"><strong>Uyarı!</strong> Bu sertifikanın süresi {{ days }} gün içinde dolacak. Yenileme işlemi başlatılmalı!</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            {% elif days <= 30 %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <span class="alert-icon"><i class="fas fa-info-circle"></i></span>
+                <span class="alert-text"><strong>Bilgi:</strong> Bu sertifikanın süresi {{ days }} gün içinde dolacak. Yenileme planlaması yapılabilir.</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Certificate Info -->
+        <div class="col-lg-8">
+            <!-- Basic Information -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Temel Bilgiler</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Common Name</label>
+                                <p class="text-sm font-weight-bold mb-0">{{ certificate.common_name }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Uygulama Adı</label>
+                                <p class="text-sm mb-0">{{ certificate.application_name|default:"Belirtilmemiş" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Sunucu</label>
+                                <p class="text-sm mb-0">{{ certificate.server_hostname }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Port</label>
+                                <p class="text-sm mb-0">
+                                    {% if certificate.port %}
+                                    <span class="badge bg-gradient-info">{{ certificate.port }}</span>
+                                    {% else %}
+                                    Belirtilmemiş
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Ortam</label>
+                                <p class="text-sm mb-0">
+                                    {% if certificate.environment == 'production' %}
+                                    <span class="badge bg-gradient-danger">Production</span>
+                                    {% elif certificate.environment == 'test' %}
+                                    <span class="badge bg-gradient-warning">Test</span>
+                                    {% elif certificate.environment == 'development' %}
+                                    <span class="badge bg-gradient-info">Development</span>
+                                    {% else %}
+                                    {{ certificate.environment|default:"Belirtilmemiş" }}
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Senkronizasyon Kaynağı</label>
+                                <p class="text-sm mb-0">
+                                    {% if certificate.sync_source == 'sql' %}
+                                    <span class="badge bg-gradient-info">SQL Database</span>
+                                    {% elif certificate.sync_source == 'appviewx' %}
+                                    <span class="badge bg-gradient-success">AppViewX API</span>
+                                    {% elif certificate.sync_source == 'ansible' %}
+                                    <span class="badge bg-gradient-warning">Ansible</span>
+                                    {% else %}
+                                    <span class="badge bg-gradient-secondary">Manual</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Certificate Details -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Sertifika Detayları</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Serial Number</label>
+                                <p class="text-sm font-monospace mb-0">{{ certificate.serial_number|default:"Belirtilmemiş" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Thumbprint</label>
+                                <p class="text-sm font-monospace mb-0">{{ certificate.thumbprint|default:"Belirtilmemiş" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Başlangıç Tarihi</label>
+                                <p class="text-sm mb-0">
+                                    {{ certificate.valid_from|date:"d.m.Y H:i" }}
+                                    <small class="text-secondary">({{ certificate.valid_from|timesince }} önce)</small>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Bitiş Tarihi</label>
+                                <p class="text-sm mb-0">
+                                    {{ certificate.valid_to|date:"d.m.Y H:i" }}
+                                    {% with days=certificate.days_until_expiry %}
+                                    {% if days < 0 %}
+                                    <small class="text-danger">({{ days|floatformat:0|slice:"1:" }} gün önce dolmuş)</small>
+                                    {% else %}
+                                    <small class="text-secondary">({{ days }} gün kaldı)</small>
+                                    {% endif %}
+                                    {% endwith %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Issuer</label>
+                                <p class="text-sm mb-0">{{ certificate.issuer|default:"Belirtilmemiş" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Key Size</label>
+                                <p class="text-sm mb-0">
+                                    {% if certificate.key_size %}
+                                    {{ certificate.key_size }} bit
+                                    {% else %}
+                                    Belirtilmemiş
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% if certificate.subject_alternative_names %}
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Subject Alternative Names</label>
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for san in certificate.subject_alternative_names|split:"," %}
+                                    <span class="badge bg-gradient-secondary">{{ san|trim }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- KDB Specific Information -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>KDB Özel Bilgileri</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">KDB Dosya Yolu</label>
+                                <p class="text-sm font-monospace mb-0">{{ certificate.kdb_file_path|default:"Belirtilmemiş" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Label</label>
+                                <p class="text-sm mb-0">{{ certificate.label|default:"Belirtilmemiş" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Usage</label>
+                                <p class="text-sm mb-0">{{ certificate.usage|default:"Belirtilmemiş" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Trust</label>
+                                <p class="text-sm mb-0">
+                                    {% if certificate.trust %}
+                                    <span class="badge bg-gradient-success">Güvenilir</span>
+                                    {% else %}
+                                    <span class="badge bg-gradient-secondary">Belirtilmemiş</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Hızlı İşlemler</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-info btn-sm" onclick="copyCertificateInfo()">
+                            <i class="fas fa-copy me-2"></i>Bilgileri Kopyala
+                        </button>
+                        {% if certificate.application_name %}
+                        <a href="/envanter/?search={{ certificate.application_name|urlencode }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-search me-2"></i>İlgili Uygulamalar
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'sertifikalar:kdb_list' %}?search={{ certificate.server_hostname|urlencode }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-server me-2"></i>Aynı Sunucudaki Sertifikalar
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Summary -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Durum Özeti</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-sm">Geçerlilik Durumu:</span>
+                        {% with days=certificate.days_until_expiry %}
+                        {% if days < 0 %}
+                        <span class="badge bg-gradient-danger">Süresi Dolmuş</span>
+                        {% elif days <= 7 %}
+                        <span class="badge bg-gradient-danger">Kritik ({{ days }} gün)</span>
+                        {% elif days <= 30 %}
+                        <span class="badge bg-gradient-warning">Yaklaşan ({{ days }} gün)</span>
+                        {% else %}
+                        <span class="badge bg-gradient-success">Geçerli</span>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-sm">Sertifika Tipi:</span>
+                        <span class="badge bg-gradient-primary">KDB</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-sm">Son Güncelleme:</span>
+                        <span class="text-sm text-secondary">{{ certificate.last_updated|date:"d.m.Y H:i" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Certificates -->
+            {% if related_certificates %}
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>İlgili Sertifikalar</h6>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0">
+                            <tbody>
+                                {% for related in related_certificates %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex px-2 py-1">
+                                            <div>
+                                                <div class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-primary">
+                                                    <i class="fas fa-key text-white opacity-10"></i>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex flex-column justify-content-center ms-3">
+                                                <h6 class="mb-0 text-sm">{{ related.common_name|truncatechars:20 }}</h6>
+                                                <p class="text-xs text-secondary mb-0">{{ related.server_hostname }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        <a href="{% url 'sertifikalar:kdb_detail' related.id %}" class="btn btn-link text-secondary mb-0">
+                                            <i class="fas fa-eye text-xs"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Notifications -->
+            {% if recent_notifications %}
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6>Son Bildirimler</h6>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0">
+                            <tbody>
+                                {% for notification in recent_notifications %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex px-2 py-1">
+                                            <div>
+                                                <div class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-info">
+                                                    <i class="fas fa-bell text-white opacity-10"></i>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex flex-column justify-content-center ms-3">
+                                                <h6 class="mb-0 text-sm">{{ notification.get_alert_type_display }}</h6>
+                                                <p class="text-xs text-secondary mb-0">{{ notification.sent_at|date:"d.m.Y H:i" }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyCertificateInfo() {
+    const certInfo = `
+KDB Sertifika Bilgileri
+======================
+Common Name: {{ certificate.common_name }}
+Sunucu: {{ certificate.server_hostname }}
+{% if certificate.port %}Port: {{ certificate.port }}{% endif %}
+Uygulama: {{ certificate.application_name|default:"Belirtilmemiş" }}
+Ortam: {{ certificate.environment|default:"Belirtilmemiş" }}
+Geçerlilik: {{ certificate.valid_from|date:"d.m.Y" }} - {{ certificate.valid_to|date:"d.m.Y" }}
+{% if certificate.serial_number %}Serial: {{ certificate.serial_number }}{% endif %}
+{% if certificate.thumbprint %}Thumbprint: {{ certificate.thumbprint }}{% endif %}
+{% if certificate.kdb_file_path %}KDB Yolu: {{ certificate.kdb_file_path }}{% endif %}
+{% if certificate.label %}Label: {{ certificate.label }}{% endif %}
+Kaynak: {{ certificate.sync_source|default:"Manual" }}
+Son Güncelleme: {{ certificate.last_updated|date:"d.m.Y H:i" }}
+    `.trim();
+    
+    navigator.clipboard.writeText(certInfo).then(() => {
+        showToast('Sertifika bilgileri kopyalandı', 'success');
+    }).catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = certInfo;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showToast('Sertifika bilgileri kopyalandı', 'success');
+    });
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

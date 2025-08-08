@@ -1,0 +1,248 @@
+{% extends "layouts/main.html" %}
+{% load static %}
+
+{% block title %}Uygulama Sil - {{ application.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 text-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Uygulama Silme Onayı
+                        </h6>
+                        <a href="{% url 'envanter:application_detail' application.pk %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>Geri
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Dikkat!
+                        </h6>
+                        <p class="mb-0">
+                            Bu işlem geri alınamaz. Uygulama ve tüm ilişkili verileri kalıcı olarak silinecektir.
+                        </p>
+                    </div>
+                    
+                    <!-- Application Info -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-uppercase text-body text-xs font-weight-bolder mb-3">Silinecek Uygulama Bilgileri</h6>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <div class="icon icon-shape icon-sm shadow border-radius-md bg-gradient-danger me-3">
+                                                    <i class="fas fa-cube text-white opacity-10"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0">{{ application.name }}</h6>
+                                                    <p class="text-sm text-secondary mb-0">{{ application.code_name }}</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td class="text-sm font-weight-bold border-0">Ortam:</td>
+                                                            <td class="text-sm border-0">{{ application.environment.name }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="text-sm font-weight-bold border-0">Durum:</td>
+                                                            <td class="text-sm border-0">
+                                                                <span class="badge {{ application.get_status_badge_class }}">
+                                                                    {{ application.get_status_display }}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="text-sm font-weight-bold border-0">Kritiklik:</td>
+                                                            <td class="text-sm border-0">
+                                                                {% if application.business_criticality == 'critical' %}
+                                                                <span class="badge bg-gradient-danger">Kritik</span>
+                                                                {% elif application.business_criticality == 'high' %}
+                                                                <span class="badge bg-gradient-warning">Yüksek</span>
+                                                                {% elif application.business_criticality == 'medium' %}
+                                                                <span class="badge bg-gradient-info">Orta</span>
+                                                                {% else %}
+                                                                <span class="badge bg-gradient-secondary">Düşük</span>
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="text-sm font-weight-bold border-0">Sahip:</td>
+                                                            <td class="text-sm border-0">{{ application.owner.get_full_name|default:application.owner.username }}</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <h6 class="text-uppercase text-body text-xs font-weight-bolder mb-3">İlişkili Veriler</h6>
+                                            
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="text-sm">Sunucular:</span>
+                                                    <span class="badge bg-gradient-info">{{ application.servers.count }}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="text-sm">Teknolojiler:</span>
+                                                    <span class="badge bg-gradient-info">{{ application.technologies.count }}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="text-sm">Veritabanları:</span>
+                                                    <span class="badge bg-gradient-info">{{ application.databases.count }}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            {% if application.servers.exists %}
+                                            <div class="mt-3">
+                                                <small class="text-muted">Bağlı Sunucular:</small>
+                                                <ul class="list-unstyled mt-2">
+                                                    {% for server in application.servers.all %}
+                                                    <li class="text-sm">
+                                                        <i class="fas fa-server text-secondary me-1"></i>
+                                                        {{ server.hostname }}
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Critical Application Warning -->
+                    {% if application.business_criticality == 'critical' %}
+                    <div class="alert alert-danger" role="alert">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-exclamation-circle me-2"></i>Kritik Uygulama Uyarısı
+                        </h6>
+                        <p class="mb-0">
+                            Bu uygulama <strong>kritik</strong> olarak işaretlenmiş. Silmeden önce sistem yöneticisi ile iletişime geçmeniz önerilir.
+                        </p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Confirmation Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                                <label class="form-check-label" for="confirmDelete">
+                                    Bu uygulamayı silmek istediğimi ve bu işlemin geri alınamaz olduğunu anlıyorum.
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="confirmationText" class="form-label">
+                                Onaylamak için aşağıdaki kutuya <strong>"{{ application.code_name }}"</strong> yazın:
+                            </label>
+                            <input type="text" class="form-control" id="confirmationText" 
+                                   placeholder="{{ application.code_name }}" required>
+                            <div class="invalid-feedback" id="confirmationError">
+                                Lütfen uygulama kod adını doğru yazın.
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'envanter:application_detail' application.pk %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>İptal
+                            </a>
+                            <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                                <i class="fas fa-trash me-1"></i>Uygulamayı Sil
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmCheckbox = document.getElementById('confirmDelete');
+    const confirmationText = document.getElementById('confirmationText');
+    const deleteButton = document.getElementById('deleteButton');
+    const confirmationError = document.getElementById('confirmationError');
+    const expectedText = '{{ application.code_name }}';
+    
+    function validateForm() {
+        const isChecked = confirmCheckbox.checked;
+        const textMatches = confirmationText.value.trim() === expectedText;
+        
+        if (textMatches) {
+            confirmationText.classList.remove('is-invalid');
+            confirmationText.classList.add('is-valid');
+        } else if (confirmationText.value.trim() !== '') {
+            confirmationText.classList.add('is-invalid');
+            confirmationText.classList.remove('is-valid');
+        } else {
+            confirmationText.classList.remove('is-invalid', 'is-valid');
+        }
+        
+        deleteButton.disabled = !(isChecked && textMatches);
+        
+        if (isChecked && textMatches) {
+            deleteButton.classList.remove('btn-secondary');
+            deleteButton.classList.add('btn-danger');
+        } else {
+            deleteButton.classList.remove('btn-danger');
+            deleteButton.classList.add('btn-secondary');
+        }
+    }
+    
+    confirmCheckbox.addEventListener('change', validateForm);
+    confirmationText.addEventListener('input', validateForm);
+    
+    // Prevent accidental form submission
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (!confirmCheckbox.checked || confirmationText.value.trim() !== expectedText) {
+            e.preventDefault();
+            alert('Lütfen tüm onay adımlarını tamamlayın.');
+            return false;
+        }
+        
+        // Final confirmation
+        if (!confirm('Bu uygulamayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Show loading state
+        deleteButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Siliniyor...';
+        deleteButton.disabled = true;
+    });
+    
+    // Auto-focus on confirmation text when checkbox is checked
+    confirmCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            confirmationText.focus();
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sertifika Süre Uyarısı - {{ certificate.common_name }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .alert-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .alert-box {
+            border-left: 4px solid #dc3545;
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .alert-box.warning {
+            border-left-color: #ffc107;
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .alert-box.info {
+            border-left-color: #17a2b8;
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .cert-details {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .cert-details h3 {
+            margin-top: 0;
+            color: #495057;
+            font-size: 18px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #6c757d;
+        }
+        .detail-value {
+            color: #495057;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .badge-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .badge-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .action-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 0 10px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 0;
+            }
+            .detail-row {
+                flex-direction: column;
+            }
+            .detail-label {
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="alert-icon">
+                {% if alert_type == 'expired' %}
+                ⚠️
+                {% elif alert_type == 'expiring_7' %}
+                🔔
+                {% else %}
+                ℹ️
+                {% endif %}
+            </div>
+            <h1>Sertifika Süre Uyarısı</h1>
+            <p>{{ certificate.get_certificate_type_display }} Sertifikası</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Alert Message -->
+            {% if alert_type == 'expired' %}
+            <div class="alert-box">
+                <strong>ACİL DURUM!</strong> Bu sertifikanın süresi dolmuş durumda. Hemen müdahale edilmesi gerekiyor.
+            </div>
+            {% elif alert_type == 'expiring_7' %}
+            <div class="alert-box warning">
+                <strong>UYARI!</strong> Bu sertifikanın süresi 7 gün içinde dolacak. Yenileme işlemi başlatılmalı.
+            </div>
+            {% else %}
+            <div class="alert-box info">
+                <strong>BİLGİ:</strong> Bu sertifikanın süresi 30 gün içinde dolacak. Yenileme planlaması yapılabilir.
+            </div>
+            {% endif %}
+
+            <!-- Certificate Details -->
+            <div class="cert-details">
+                <h3>Sertifika Detayları</h3>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Common Name:</span>
+                    <span class="detail-value">{{ certificate.common_name }}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Sunucu:</span>
+                    <span class="detail-value">{{ certificate.server_hostname }}</span>
+                </div>
+                
+                {% if certificate.application_name or certificate.java_application %}
+                <div class="detail-row">
+                    <span class="detail-label">Uygulama:</span>
+                    <span class="detail-value">{{ certificate.application_name|default:certificate.java_application }}</span>
+                </div>
+                {% endif %}
+                
+                <div class="detail-row">
+                    <span class="detail-label">Ortam:</span>
+                    <span class="detail-value">
+                        {% if certificate.environment == 'production' %}
+                        <span class="badge badge-danger">Production</span>
+                        {% elif certificate.environment == 'test' %}
+                        <span class="badge badge-warning">Test</span>
+                        {% elif certificate.environment == 'development' %}
+                        <span class="badge badge-primary">Development</span>
+                        {% else %}
+                        {{ certificate.environment|default:"Belirtilmemiş" }}
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Sertifika Tipi:</span>
+                    <span class="detail-value">
+                        {% if certificate.certificate_type == 'kdb' %}
+                        <span class="badge badge-primary">KDB</span>
+                        {% else %}
+                        <span class="badge badge-success">Java</span>
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Başlangıç Tarihi:</span>
+                    <span class="detail-value">{{ certificate.valid_from|date:"d.m.Y H:i" }}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Bitiş Tarihi:</span>
+                    <span class="detail-value">
+                        <strong>{{ certificate.valid_to|date:"d.m.Y H:i" }}</strong>
+                        {% with days=certificate.days_until_expiry %}
+                        {% if days < 0 %}
+                        <span class="badge badge-danger">{{ days|floatformat:0|slice:"1:" }} gün önce dolmuş</span>
+                        {% else %}
+                        <span class="badge badge-warning">{{ days }} gün kaldı</span>
+                        {% endif %}
+                        {% endwith %}
+                    </span>
+                </div>
+                
+                {% if certificate.serial_number %}
+                <div class="detail-row">
+                    <span class="detail-label">Serial Number:</span>
+                    <span class="detail-value" style="font-family: monospace;">{{ certificate.serial_number }}</span>
+                </div>
+                {% endif %}
+                
+                {% if certificate.issuer %}
+                <div class="detail-row">
+                    <span class="detail-label">Issuer:</span>
+                    <span class="detail-value">{{ certificate.issuer }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="{{ portal_url }}{% if certificate.certificate_type == 'kdb' %}{% url 'sertifikalar:kdb_detail' certificate.id %}{% else %}{% url 'sertifikalar:java_detail' certificate.id %}{% endif %}" class="btn btn-primary">
+                    Sertifika Detayını Görüntüle
+                </a>
+                <a href="{{ portal_url }}{% url 'sertifikalar:dashboard' %}" class="btn btn-secondary">
+                    Sertifika Dashboard
+                </a>
+            </div>
+
+            <!-- Additional Information -->
+            <div style="background-color: #e9ecef; padding: 15px; border-radius: 6px; margin-top: 20px;">
+                <h4 style="margin-top: 0; color: #495057;">Yapılması Gerekenler:</h4>
+                <ul style="margin-bottom: 0; color: #6c757d;">
+                    <li>Sertifika yenileme sürecini başlatın</li>
+                    <li>İlgili uygulama ekipleriyle koordine olun</li>
+                    <li>Yenileme sonrası deployment planını hazırlayın</li>
+                    <li>Test ortamında önce yenileme işlemini deneyin</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Bu e-posta <strong>Portall Sertifika Yönetim Sistemi</strong> tarafından otomatik olarak gönderilmiştir.</p>
+            <p>
+                <a href="{{ portal_url }}">Portall'a Git</a> | 
+                <a href="{{ portal_url }}{% url 'sertifikalar:dashboard' %}">Sertifika Dashboard</a>
+            </p>
+            <p style="font-size: 12px; color: #adb5bd;">
+                Gönderim Zamanı: {{ notification.sent_at|date:"d.m.Y H:i" }}
+            </p>
+        </div>
+    </div>
+</body>
+</html>

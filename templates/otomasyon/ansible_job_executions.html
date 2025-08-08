@@ -1,0 +1,458 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Ansible Job Executions{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item"><a href="{% url 'otomasyon:ansible_job_templates' %}">Ansible</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">Job Executions</li>
+                                </ol>
+                            </nav>
+                            <h6 class="mb-0">Job Executions</h6>
+                            <p class="text-sm mb-0">Ansible Job çalıştırma geçmişi</p>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary btn-sm" onclick="refreshPage()">
+                                <i class="ri-refresh-line me-1"></i>Yenile
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- İstatistik Kartları -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-uppercase font-weight-bold">Toplam</p>
+                                <h5 class="font-weight-bolder">{{ stats.total_executions }}</h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-primary shadow-primary text-center rounded-circle">
+                                <i class="ri-play-list-line text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-uppercase font-weight-bold">Çalışıyor</p>
+                                <h5 class="font-weight-bolder text-info">{{ stats.running_jobs }}</h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-info shadow-info text-center rounded-circle">
+                                <i class="ri-play-circle-line text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-uppercase font-weight-bold">Başarılı</p>
+                                <h5 class="font-weight-bolder text-success">{{ stats.successful_jobs }}</h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-success shadow-success text-center rounded-circle">
+                                <i class="ri-check-line text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-uppercase font-weight-bold">Başarısız</p>
+                                <h5 class="font-weight-bolder text-danger">{{ stats.failed_jobs }}</h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-danger shadow-danger text-center rounded-circle">
+                                <i class="ri-close-line text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtreleme -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Filtreler</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="filterForm">
+                        <div class="row">
+                            <div class="col-md-3">
+                                {{ filter_form.search.label_tag }}
+                                {{ filter_form.search }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ filter_form.status.label_tag }}
+                                {{ filter_form.status }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ filter_form.executor.label_tag }}
+                                {{ filter_form.executor }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ filter_form.date_from.label_tag }}
+                                {{ filter_form.date_from }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ filter_form.date_to.label_tag }}
+                                {{ filter_form.date_to }}
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary btn-sm me-2">
+                                    <i class="ri-search-line me-1"></i>Filtrele
+                                </button>
+                                <a href="{% url 'otomasyon:ansible_job_executions' %}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="ri-refresh-line me-1"></i>Temizle
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Executions Tablosu -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6>Job Executions</h6>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    {% if job_executions %}
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0" id="jobExecutionsTable">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Job Template</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Execution ID</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Durum</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Çalıştıran</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Süre</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tarih</th>
+                                    <th class="text-secondary opacity-7">İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for execution in job_executions %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex px-2 py-1">
+                                            <div class="d-flex flex-column justify-content-center">
+                                                <h6 class="mb-0 text-sm">
+                                                    <a href="{% url 'otomasyon:ansible_job_template_detail' execution.job_template.pk %}" class="text-decoration-none">
+                                                        {{ execution.job_template.name }}
+                                                    </a>
+                                                </h6>
+                                                {% if execution.job_template.category %}
+                                                <p class="text-xs text-secondary mb-0">
+                                                    <i class="{{ execution.job_template.category.icon }} me-1"></i>{{ execution.job_template.category.name }}
+                                                </p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column justify-content-center">
+                                            <h6 class="mb-0 text-sm">
+                                                <a href="{% url 'otomasyon:ansible_job_execution_detail' execution.pk %}" class="text-decoration-none">
+                                                    <code class="text-xs">{{ execution.execution_id|slice:":8" }}...</code>
+                                                </a>
+                                            </h6>
+                                            {% if execution.tower_job_id %}
+                                            <p class="text-xs text-secondary mb-0">Tower ID: {{ execution.tower_job_id }}</p>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td class="align-middle text-center text-sm">
+                                        <span class="badge badge-sm bg-gradient-{{ execution.get_status_display_class }}" id="status-{{ execution.pk }}">
+                                            {% if execution.is_running %}
+                                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                            {% endif %}
+                                            {{ execution.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <div class="avatar avatar-xs me-2">
+                                                <div class="avatar-initial rounded-circle bg-gradient-primary">
+                                                    {{ execution.executor.first_name.0|default:execution.executor.username.0|upper }}
+                                                </div>
+                                            </div>
+                                            <span class="text-secondary text-xs font-weight-bold">
+                                                {{ execution.executor.get_full_name|default:execution.executor.username }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        {% if execution.duration %}
+                                        <span class="text-secondary text-xs font-weight-bold">
+                                            {% if execution.duration < 60 %}
+                                                {{ execution.duration|floatformat:0 }}s
+                                            {% elif execution.duration < 3600 %}
+                                                {{ execution.duration|floatformat:0|div:60 }}m
+                                            {% else %}
+                                                {{ execution.duration|floatformat:0|div:3600 }}h
+                                            {% endif %}
+                                        </span>
+                                        {% elif execution.is_running %}
+                                        <span class="text-info text-xs font-weight-bold" id="duration-{{ execution.pk }}">
+                                            <i class="ri-time-line me-1"></i>Çalışıyor
+                                        </span>
+                                        {% else %}
+                                        <span class="text-secondary text-xs">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        <span class="text-secondary text-xs font-weight-bold">{{ execution.created_at|date:"d.m.Y H:i" }}</span>
+                                        {% if execution.finished_at %}
+                                        <p class="text-xs text-secondary mb-0">{{ execution.finished_at|date:"H:i" }}</p>
+                                        {% endif %}
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="dropdown">
+                                            <button class="btn btn-link text-secondary mb-0" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="ri-more-2-fill"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a class="dropdown-item" href="{% url 'otomasyon:ansible_job_execution_detail' execution.pk %}">
+                                                        <i class="ri-eye-line me-2"></i>Detay
+                                                    </a>
+                                                </li>
+                                                {% if execution.is_running %}
+                                                <li>
+                                                    <button class="dropdown-item text-warning" onclick="refreshJobStatus({{ execution.pk }})">
+                                                        <i class="ri-refresh-line me-2"></i>Durumu Yenile
+                                                    </button>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <button class="dropdown-item text-danger" onclick="cancelJob({{ execution.pk }})">
+                                                        <i class="ri-stop-circle-line me-2"></i>İptal Et
+                                                    </button>
+                                                </li>
+                                                {% endif %}
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item" href="{% url 'otomasyon:ansible_job_template_detail' execution.job_template.pk %}">
+                                                        <i class="ri-settings-3-line me-2"></i>Template
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <div class="icon icon-shape icon-lg bg-gradient-primary shadow mx-auto">
+                            <i class="ri-play-list-line opacity-10"></i>
+                        </div>
+                        <h6 class="mt-3">Henüz Job Execution Yok</h6>
+                        <p class="text-sm text-secondary">Job template'leri çalıştırdığınızda burada görünecek.</p>
+                        <a href="{% url 'otomasyon:ansible_job_templates' %}" class="btn btn-primary btn-sm">
+                            <i class="ri-settings-3-line me-1"></i>Job Templates
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">İlk</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Önceki</a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Sonraki</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Son</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // DataTables initialization
+    $('#jobExecutionsTable').DataTable({
+        "paging": false,
+        "searching": false,
+        "info": false,
+        "ordering": true,
+        "order": [[ 5, "desc" ]],
+        "columnDefs": [
+            { "orderable": false, "targets": [6] }
+        ],
+        "language": {
+            "emptyTable": "Veri bulunamadı",
+            "zeroRecords": "Eşleşen kayıt bulunamadı"
+        }
+    });
+    
+    // Auto-submit filter form on change
+    $('#filterForm input, #filterForm select').on('change keyup', function() {
+        if ($(this).attr('type') === 'text') {
+            clearTimeout(window.searchTimeout);
+            window.searchTimeout = setTimeout(function() {
+                $('#filterForm').submit();
+            }, 500);
+        } else {
+            $('#filterForm').submit();
+        }
+    });
+    
+    // Auto-refresh running jobs every 30 seconds
+    setInterval(function() {
+        $('.spinner-border').each(function() {
+            const executionId = $(this).closest('tr').find('[id^="status-"]').attr('id').split('-')[1];
+            refreshJobStatus(executionId, false);
+        });
+    }, 30000);
+});
+
+function refreshPage() {
+    location.reload();
+}
+
+function refreshJobStatus(executionId, showMessage = true) {
+    $.get(`/otomasyon/ansible/execution/${executionId}/refresh/`)
+        .done(function(data) {
+            // Update status badge
+            const statusBadge = $(`#status-${executionId}`);
+            statusBadge.removeClass().addClass(`badge badge-sm bg-gradient-${data.status_class}`);
+            
+            if (data.is_running) {
+                statusBadge.html(`<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>${data.status_display}`);
+            } else {
+                statusBadge.html(data.status_display);
+            }
+            
+            // Update duration
+            if (data.duration) {
+                const durationElement = $(`#duration-${executionId}`);
+                let durationText;
+                if (data.duration < 60) {
+                    durationText = `${Math.round(data.duration)}s`;
+                } else if (data.duration < 3600) {
+                    durationText = `${Math.round(data.duration / 60)}m`;
+                } else {
+                    durationText = `${Math.round(data.duration / 3600)}h`;
+                }
+                durationElement.html(durationText);
+            }
+            
+            if (showMessage) {
+                showNotification('Durum güncellendi', 'success');
+            }
+        })
+        .fail(function(xhr) {
+            if (showMessage) {
+                showNotification('Durum güncellenemedi: ' + xhr.responseJSON?.error || 'Bilinmeyen hata', 'error');
+            }
+        });
+}
+
+function cancelJob(executionId) {
+    if (confirm('Bu job\'u iptal etmek istediğinizden emin misiniz?')) {
+        $.post(`/otomasyon/ansible/execution/${executionId}/cancel/`)
+            .done(function() {
+                showNotification('Job iptal edildi', 'success');
+                setTimeout(() => location.reload(), 1000);
+            })
+            .fail(function(xhr) {
+                showNotification('Job iptal edilemedi: ' + xhr.responseJSON?.error || 'Bilinmeyen hata', 'error');
+            });
+    }
+}
+
+function showNotification(message, type) {
+    // Simple notification system - can be replaced with a proper toast library
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const notification = $(`
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `);
+    
+    $('body').append(notification);
+    setTimeout(() => notification.remove(), 5000);
+}
+</script>
+{% endblock %}

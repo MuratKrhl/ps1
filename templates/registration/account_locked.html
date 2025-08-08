@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>Hesap Kilitli | Portall</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="Portall - Middleware Operations Portal" name="description" />
+    <meta content="Portall Team" name="author" />
+    
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="{% static 'assets/images/favicon.ico' %}">
+    
+    <!-- Bootstrap Css -->
+    <link href="{% static 'assets/css/bootstrap.min.css' %}" id="bootstrap-style" rel="stylesheet" type="text/css" />
+    <!-- Icons Css -->
+    <link href="{% static 'assets/css/icons.min.css' %}" rel="stylesheet" type="text/css" />
+    <!-- App Css-->
+    <link href="{% static 'assets/css/app.min.css' %}" id="app-style" rel="stylesheet" type="text/css" />
+    
+    <style>
+        .auth-body-bg {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            min-height: 100vh;
+        }
+        .wrapper-page {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .card {
+            max-width: 500px;
+            width: 100%;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        .error-icon {
+            font-size: 4rem;
+            color: #ff6b6b;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+    </style>
+</head>
+
+<body class="auth-body-bg">
+    <div class="wrapper-page">
+        <div class="container-fluid p-0">
+            <div class="card">
+                <div class="card-body p-4 text-center">
+                    <div class="mb-4">
+                        <i class="mdi mdi-lock-alert error-icon"></i>
+                    </div>
+                    
+                    <h3 class="text-danger mb-3">Hesabınız Geçici Olarak Kilitlendi</h3>
+                    
+                    <div class="alert alert-warning" role="alert">
+                        <h5 class="alert-heading">Güvenlik Uyarısı</h5>
+                        <p class="mb-0">
+                            <strong>{{ failure_limit }}</strong> defa yanlış şifre girdiğiniz için hesabınız güvenlik amacıyla geçici olarak kilitlenmiştir.
+                        </p>
+                    </div>
+                    
+                    <div class="row text-start mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body p-3">
+                                    <h6 class="card-title"><i class="mdi mdi-clock-outline text-warning"></i> Bekleme Süresi</h6>
+                                    <p class="card-text mb-0">
+                                        <strong>{{ cooloff_time }} saat</strong>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body p-3">
+                                    <h6 class="card-title"><i class="mdi mdi-shield-check text-success"></i> Güvenlik</h6>
+                                    <p class="card-text mb-0">
+                                        IP ve kullanıcı bazlı koruma
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6>Ne Yapabilirsiniz?</h6>
+                        <ul class="list-unstyled text-start">
+                            <li class="mb-2">
+                                <i class="mdi mdi-check-circle text-success"></i>
+                                <strong>{{ cooloff_time }} saat</strong> bekleyin ve tekrar deneyin
+                            </li>
+                            <li class="mb-2">
+                                <i class="mdi mdi-phone text-info"></i>
+                                IT Destek ile iletişime geçin: <strong>dahili 1234</strong>
+                            </li>
+                            <li class="mb-2">
+                                <i class="mdi mdi-email text-primary"></i>
+                                E-posta gönderin: <strong>it-support@company.com</strong>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'authentication:login' %}" class="btn btn-primary">
+                            <i class="mdi mdi-arrow-left"></i> Giriş Sayfasına Dön
+                        </a>
+                        <a href="{% url 'authentication:health_check' %}" class="btn btn-outline-secondary">
+                            <i class="mdi mdi-help-circle"></i> Sistem Durumu
+                        </a>
+                    </div>
+                    
+                    <div class="mt-4 text-muted small">
+                        <p class="mb-0">
+                            <i class="mdi mdi-information"></i>
+                            Bu güvenlik önlemi hesabınızı korumak için alınmıştır.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script src="{% static 'assets/libs/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'assets/libs/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'assets/js/app.js' %}"></script>
+    
+    <script>
+        // Auto refresh after cooloff time
+        setTimeout(function() {
+            window.location.href = "{% url 'authentication:login' %}";
+        }, {{ cooloff_time|default:1 }} * 60 * 60 * 1000); // Convert hours to milliseconds
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="tr" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable">
+
+<head>
+    <meta charset="utf-8" />
+    <title>{% block title %}Portall - Middleware Operations Portal{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="Middleware Operations Portal" name="description" />
+    <meta content="Portall Team" name="author" />
+    
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="{% load static %}{% static 'images/favicon.ico' %}">
+    
+    <!-- Layout config Js -->
+    <script src="{% load static %}{% static 'js/layout.js' %}"></script>
+    
+    <!-- Bootstrap Css -->
+    <link href="{% load static %}{% static 'css/bootstrap.min.css' %}" rel="stylesheet" type="text/css" />
+    
+    <!-- Icons Css -->
+    <link href="{% load static %}{% static 'css/icons.min.css' %}" rel="stylesheet" type="text/css" />
+    
+    <!-- App Css-->
+    <link href="{% load static %}{% static 'css/app.min.css' %}" rel="stylesheet" type="text/css" />
+    
+    <!-- Custom css -->
+    <link href="{% load static %}{% static 'css/custom.min.css' %}" rel="stylesheet" type="text/css" />
+    
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Begin page -->
+    <div id="layout-wrapper">
+        
+        <!-- Header -->
+        <header id="page-topbar">
+            <div class="layout-width">
+                <div class="navbar-header">
+                    <div class="d-flex">
+                        <!-- LOGO -->
+                        <div class="navbar-brand-box horizontal-logo">
+                            <a href="{% url 'dashboard:home' %}" class="logo logo-dark">
+                                <span class="logo-sm">
+                                    <img src="{% load static %}{% static 'images/logo-sm.png' %}" alt="" height="22">
+                                </span>
+                                <span class="logo-lg">
+                                    <img src="{% load static %}{% static 'images/logo-dark.png' %}" alt="" height="17">
+                                </span>
+                            </a>
+                            <a href="{% url 'dashboard:home' %}" class="logo logo-light">
+                                <span class="logo-sm">
+                                    <img src="{% load static %}{% static 'images/logo-sm.png' %}" alt="" height="22">
+                                </span>
+                                <span class="logo-lg">
+                                    <img src="{% load static %}{% static 'images/logo-light.png' %}" alt="" height="17">
+                                </span>
+                            </a>
+                        </div>
+
+                        <button type="button" class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger" id="topnav-hamburger-icon">
+                            <span class="hamburger-icon">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </span>
+                        </button>
+
+                        <!-- App Search-->
+                        <form class="app-search d-none d-md-block">
+                            <div class="position-relative">
+                                <input type="text" class="form-control" placeholder="Portal'da ara..." autocomplete="off" id="search-options" value="">
+                                <span class="mdi mdi-magnify search-widget-icon"></span>
+                                <span class="mdi mdi-close-circle search-widget-icon search-widget-icon-close d-none" id="search-close-options"></span>
+                            </div>
+                            <div class="dropdown-menu dropdown-menu-lg" id="search-dropdown">
+                                <div data-simplebar style="max-height: 320px;">
+                                    <!-- Search results will be populated here -->
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="d-flex align-items-center">
+                        
+                        <!-- Theme Toggle -->
+                        <div class="ms-1 header-item d-none d-sm-flex">
+                            <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode">
+                                <i class='bx bx-moon fs-22'></i>
+                            </button>
+                        </div>
+
+                        <!-- Notifications -->
+                        <div class="dropdown topbar-head-dropdown ms-1 header-item" id="notificationDropdown">
+                            <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" id="page-header-notifications-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                                <i class='bx bx-bell fs-22'></i>
+                                <span class="position-absolute topbar-badge fs-10 translate-middle badge rounded-pill bg-danger">3<span class="visually-hidden">unread messages</span></span>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0" aria-labelledby="page-header-notifications-dropdown">
+                                <div class="dropdown-head bg-primary bg-pattern rounded-top">
+                                    <div class="p-3">
+                                        <div class="row align-items-center">
+                                            <div class="col">
+                                                <h6 class="m-0 fs-16 fw-semibold text-white"> Bildirimler </h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-content position-relative" id="notificationItemsTabContent">
+                                    <div class="tab-pane fade show active py-2 ps-2" id="all-noti-tab" role="tabpanel">
+                                        <div data-simplebar style="max-height: 300px;" class="pe-2">
+                                            <!-- Notifications will be populated here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User Profile -->
+                        <div class="dropdown ms-sm-3 header-item topbar-user">
+                            <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="d-flex align-items-center">
+                                    <img class="rounded-circle header-profile-user" src="{% if user.userprofile.avatar %}{{ user.userprofile.avatar.url }}{% else %}{% load static %}{% static 'images/users/avatar-1.jpg' %}{% endif %}" alt="Header Avatar">
+                                    <span class="text-start ms-xl-2">
+                                        <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{ user.get_full_name|default:user.username }}</span>
+                                        <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">{{ user.userprofile.department|default:"Kullanıcı" }}</span>
+                                    </span>
+                                </span>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                <h6 class="dropdown-header">Hoş geldiniz {{ user.first_name|default:user.username }}!</h6>
+                                <a class="dropdown-item" href="{% url 'dashboard:profile' %}"><i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Profil</span></a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="{% url 'dashboard:logout' %}"><i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i> <span class="align-middle" data-key="t-logout">Çıkış Yap</span></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        {% include 'includes/sidebar.html' %}
+        
+        <!-- Vertical Overlay-->
+        <div class="vertical-overlay"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="page-content">
+                <div class="container-fluid">
+                    
+                    <!-- Page Title -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                                <h4 class="mb-sm-0">{% block page_title %}Dashboard{% endblock %}</h4>
+                                <div class="page-title-right">
+                                    <ol class="breadcrumb m-0">
+                                        {% block breadcrumb %}
+                                        <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Portall</a></li>
+                                        <li class="breadcrumb-item active">Dashboard</li>
+                                        {% endblock %}
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Main Content -->
+                    {% block content %}{% endblock %}
+
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="footer">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <script>document.write(new Date().getFullYear())</script> © Portall.
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-sm-end d-none d-sm-block">
+                                Middleware Operations Portal
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script src="{% load static %}{% static 'libs/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% load static %}{% static 'libs/simplebar/simplebar.min.js' %}"></script>
+    <script src="{% load static %}{% static 'libs/node-waves/waves.min.js' %}"></script>
+    <script src="{% load static %}{% static 'libs/feather-icons/feather.min.js' %}"></script>
+    <script src="{% load static %}{% static 'js/pages/plugins/lord-icon-2.1.0.js' %}"></script>
+    <script src="{% load static %}{% static 'js/plugins.js' %}"></script>
+
+    <!-- App js -->
+    <script src="{% load static %}{% static 'js/app.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

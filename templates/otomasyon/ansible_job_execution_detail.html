@@ -1,0 +1,496 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}{{ job_execution.execution_id }} - Job Execution{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item"><a href="{% url 'otomasyon:ansible_job_templates' %}">Ansible</a></li>
+                                    <li class="breadcrumb-item"><a href="{% url 'otomasyon:ansible_job_executions' %}">Executions</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">{{ job_execution.execution_id|slice:":8" }}...</li>
+                                </ol>
+                            </nav>
+                            <h6 class="mb-0">Job Execution Detayı</h6>
+                            <p class="text-sm mb-0">
+                                <a href="{% url 'otomasyon:ansible_job_template_detail' job_execution.job_template.pk %}" class="text-decoration-none">
+                                    {{ job_execution.job_template.name }}
+                                </a>
+                            </p>
+                        </div>
+                        <div>
+                            {% if job_execution.is_running %}
+                            <button class="btn btn-warning btn-sm me-2" onclick="refreshStatus()">
+                                <i class="ri-refresh-line me-1"></i>Durumu Yenile
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="cancelJob()">
+                                <i class="ri-stop-circle-line me-1"></i>İptal Et
+                            </button>
+                            {% else %}
+                            <a href="{% url 'otomasyon:ansible_job_template_detail' job_execution.job_template.pk %}" class="btn btn-primary btn-sm">
+                                <i class="ri-play-circle-line me-1"></i>Tekrar Çalıştır
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sol Kolon - Execution Bilgileri -->
+        <div class="col-lg-8">
+            <!-- Genel Bilgiler -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>Execution Bilgileri</h6>
+                        <span class="badge badge-lg bg-gradient-{{ job_execution.get_status_display_class }}" id="statusBadge">
+                            {% if job_execution.is_running %}
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            {% endif %}
+                            {{ job_execution.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Execution ID</label>
+                                <p class="text-sm font-weight-bold mb-0">
+                                    <code>{{ job_execution.execution_id }}</code>
+                                    <button class="btn btn-link btn-sm p-0 ms-2" onclick="copyToClipboard('{{ job_execution.execution_id }}')">
+                                        <i class="ri-file-copy-line"></i>
+                                    </button>
+                                </p>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Job Template</label>
+                                <p class="text-sm mb-0">
+                                    <a href="{% url 'otomasyon:ansible_job_template_detail' job_execution.job_template.pk %}" class="text-decoration-none">
+                                        {{ job_execution.job_template.name }}
+                                    </a>
+                                </p>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Çalıştıran</label>
+                                <p class="text-sm mb-0">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-xs me-2">
+                                            <div class="avatar-initial rounded-circle bg-gradient-primary">
+                                                {{ job_execution.executor.first_name.0|default:job_execution.executor.username.0|upper }}
+                                            </div>
+                                        </div>
+                                        {{ job_execution.executor.get_full_name|default:job_execution.executor.username }}
+                                    </div>
+                                </p>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Job Türü</label>
+                                <p class="text-sm mb-0">
+                                    <span class="badge badge-sm bg-gradient-{% if job_execution.job_type == 'run' %}success{% else %}info{% endif %}">
+                                        {{ job_execution.get_job_type_display }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            {% if job_execution.tower_job_id %}
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Tower Job ID</label>
+                                <p class="text-sm mb-0">
+                                    <code>{{ job_execution.tower_job_id }}</code>
+                                </p>
+                            </div>
+                            {% endif %}
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Başlangıç</label>
+                                <p class="text-sm mb-0" id="startedAt">
+                                    {% if job_execution.started_at %}
+                                        {{ job_execution.started_at|date:"d.m.Y H:i:s" }}
+                                    {% else %}
+                                        <span class="text-secondary">Henüz başlamadı</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Bitiş</label>
+                                <p class="text-sm mb-0" id="finishedAt">
+                                    {% if job_execution.finished_at %}
+                                        {{ job_execution.finished_at|date:"d.m.Y H:i:s" }}
+                                    {% elif job_execution.is_running %}
+                                        <span class="text-info">Çalışıyor...</span>
+                                    {% else %}
+                                        <span class="text-secondary">-</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Süre</label>
+                                <p class="text-sm mb-0" id="duration">
+                                    {% if job_execution.duration %}
+                                        {% if job_execution.duration < 60 %}
+                                            {{ job_execution.duration|floatformat:0 }} saniye
+                                        {% elif job_execution.duration < 3600 %}
+                                            {{ job_execution.duration|floatformat:0|div:60 }} dakika
+                                        {% else %}
+                                            {{ job_execution.duration|floatformat:0|div:3600 }} saat
+                                        {% endif %}
+                                    {% elif job_execution.is_running %}
+                                        <span class="text-info">Çalışıyor...</span>
+                                    {% else %}
+                                        <span class="text-secondary">-</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Survey Cevapları -->
+            {% if survey_answers %}
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Survey Cevapları</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Soru</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Değişken</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Cevap</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for answer in survey_answers %}
+                                <tr>
+                                    <td>
+                                        <p class="text-sm font-weight-bold mb-0">{{ answer.question }}</p>
+                                    </td>
+                                    <td>
+                                        <code class="text-xs">{{ answer.variable }}</code>
+                                    </td>
+                                    <td>
+                                        <p class="text-sm mb-0">{{ answer.answer }}</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Launch Parametreleri -->
+            {% if job_execution.extra_vars or job_execution.limit or job_execution.tags or job_execution.skip_tags %}
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Launch Parametreleri</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if job_execution.extra_vars %}
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Extra Variables</label>
+                                <pre class="bg-light p-2 rounded text-xs"><code>{{ job_execution.extra_vars|pprint }}</code></pre>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if job_execution.limit %}
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Host Limit</label>
+                                <p class="text-sm mb-0"><code>{{ job_execution.limit }}</code></p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if job_execution.tags %}
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Tags</label>
+                                <p class="text-sm mb-0"><code>{{ job_execution.tags }}</code></p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if job_execution.skip_tags %}
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="text-xs text-uppercase font-weight-bolder opacity-7">Skip Tags</label>
+                                <p class="text-sm mb-0"><code>{{ job_execution.skip_tags }}</code></p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Job Output -->
+            {% if job_execution.result_stdout or job_execution.result_stderr %}
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>Job Çıktısı</h6>
+                        <div>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="downloadOutput('stdout')">
+                                <i class="ri-download-line me-1"></i>Stdout
+                            </button>
+                            {% if job_execution.result_stderr %}
+                            <button class="btn btn-outline-danger btn-sm" onclick="downloadOutput('stderr')">
+                                <i class="ri-download-line me-1"></i>Stderr
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="outputTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="stdout-tab" data-bs-toggle="tab" data-bs-target="#stdout" type="button" role="tab">
+                                <i class="ri-terminal-line me-1"></i>Standard Output
+                            </button>
+                        </li>
+                        {% if job_execution.result_stderr %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="stderr-tab" data-bs-toggle="tab" data-bs-target="#stderr" type="button" role="tab">
+                                <i class="ri-error-warning-line me-1"></i>Error Output
+                            </button>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    <div class="tab-content" id="outputTabsContent">
+                        <div class="tab-pane fade show active" id="stdout" role="tabpanel">
+                            <pre class="bg-dark text-light p-3 rounded mt-3" style="max-height: 400px; overflow-y: auto;"><code id="stdoutContent">{{ job_execution.result_stdout|default:"Henüz çıktı yok..." }}</code></pre>
+                        </div>
+                        {% if job_execution.result_stderr %}
+                        <div class="tab-pane fade" id="stderr" role="tabpanel">
+                            <pre class="bg-danger text-light p-3 rounded mt-3" style="max-height: 400px; overflow-y: auto;"><code id="stderrContent">{{ job_execution.result_stderr }}</code></pre>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sağ Kolon - Loglar ve İstatistikler -->
+        <div class="col-lg-4">
+            <!-- Hızlı İstatistikler -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Özet</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-sm">Oluşturulma</span>
+                        <span class="text-xs text-secondary">{{ job_execution.created_at|date:"d.m.Y H:i" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-sm">Verbosity</span>
+                        <span class="badge badge-sm bg-gradient-info">{{ job_execution.verbosity }}</span>
+                    </div>
+                    {% if job_execution.requires_approval %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-sm">Onay Durumu</span>
+                        {% if job_execution.approved_by %}
+                        <span class="badge badge-sm bg-gradient-success">Onaylandı</span>
+                        {% else %}
+                        <span class="badge badge-sm bg-gradient-warning">Beklemede</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% if job_execution.artifacts %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-sm">Artifacts</span>
+                        <span class="badge badge-sm bg-gradient-primary">{{ job_execution.artifacts|length }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Job Logları -->
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>Job Logları</h6>
+                        {% if job_execution.is_running %}
+                        <button class="btn btn-outline-primary btn-sm" onclick="refreshLogs()">
+                            <i class="ri-refresh-line me-1"></i>Yenile
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                    {% if job_logs %}
+                    <div class="timeline timeline-one-side" id="jobLogs">
+                        {% for log in job_logs %}
+                        <div class="timeline-block mb-3">
+                            <span class="timeline-step">
+                                <i class="ri-{% if log.level == 'error' or log.level == 'critical' %}error-warning{% elif log.level == 'warning' %}alert{% elif log.level == 'debug' %}bug{% else %}information{% endif %}-line text-{% if log.level == 'error' or log.level == 'critical' %}danger{% elif log.level == 'warning' %}warning{% elif log.level == 'debug' %}secondary{% else %}info{% endif %}"></i>
+                            </span>
+                            <div class="timeline-content">
+                                <h6 class="text-dark text-xs font-weight-bold mb-0">
+                                    <span class="badge badge-xs bg-gradient-{% if log.level == 'error' or log.level == 'critical' %}danger{% elif log.level == 'warning' %}warning{% elif log.level == 'debug' %}secondary{% else %}info{% endif %}">
+                                        {{ log.get_level_display|upper }}
+                                    </span>
+                                    <span class="text-secondary ms-2">{{ log.timestamp|date:"H:i:s" }}</span>
+                                </h6>
+                                <p class="text-xs mt-1 mb-0">{{ log.message }}</p>
+                                {% if log.host %}
+                                <p class="text-xs text-secondary mt-1 mb-0">
+                                    <i class="ri-server-line me-1"></i>{{ log.host }}
+                                </p>
+                                {% endif %}
+                                {% if log.task %}
+                                <p class="text-xs text-secondary mt-1 mb-0">
+                                    <i class="ri-task-line me-1"></i>{{ log.task }}
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="ri-file-list-line text-muted" style="font-size: 2rem;"></i>
+                        <p class="text-sm text-secondary mt-2 mb-0">Henüz log yok</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let refreshInterval;
+
+$(document).ready(function() {
+    // Auto-refresh if job is running
+    {% if job_execution.is_running %}
+    refreshInterval = setInterval(refreshStatus, 10000); // 10 seconds
+    {% endif %}
+});
+
+function refreshStatus() {
+    $.get(`/otomasyon/ansible/execution/{{ job_execution.pk }}/refresh/`)
+        .done(function(data) {
+            // Update status badge
+            const statusBadge = $('#statusBadge');
+            statusBadge.removeClass().addClass(`badge badge-lg bg-gradient-${data.status_class}`);
+            
+            if (data.is_running) {
+                statusBadge.html(`<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>${data.status_display}`);
+            } else {
+                statusBadge.html(data.status_display);
+                // Stop auto-refresh if job is no longer running
+                if (refreshInterval) {
+                    clearInterval(refreshInterval);
+                    refreshInterval = null;
+                }
+            }
+            
+            // Update timestamps
+            if (data.started_at) {
+                $('#startedAt').html(new Date(data.started_at).toLocaleString('tr-TR'));
+            }
+            if (data.finished_at) {
+                $('#finishedAt').html(new Date(data.finished_at).toLocaleString('tr-TR'));
+            }
+            
+            // Update duration
+            if (data.duration) {
+                let durationText;
+                if (data.duration < 60) {
+                    durationText = `${Math.round(data.duration)} saniye`;
+                } else if (data.duration < 3600) {
+                    durationText = `${Math.round(data.duration / 60)} dakika`;
+                } else {
+                    durationText = `${Math.round(data.duration / 3600)} saat`;
+                }
+                $('#duration').html(durationText);
+            } else if (data.is_running) {
+                $('#duration').html('<span class="text-info">Çalışıyor...</span>');
+            }
+            
+            showNotification('Durum güncellendi', 'success');
+        })
+        .fail(function(xhr) {
+            showNotification('Durum güncellenemedi: ' + (xhr.responseJSON?.error || 'Bilinmeyen hata'), 'error');
+        });
+}
+
+function cancelJob() {
+    if (confirm('Bu job\'u iptal etmek istediğinizden emin misiniz?')) {
+        window.location.href = `{% url 'otomasyon:cancel_job_execution' job_execution.pk %}`;
+    }
+}
+
+function refreshLogs() {
+    // In a real implementation, this would fetch new logs via AJAX
+    location.reload();
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        showNotification('Panoya kopyalandı', 'success');
+    }).catch(function() {
+        showNotification('Kopyalama başarısız', 'error');
+    });
+}
+
+function downloadOutput(type) {
+    const content = type === 'stdout' ? 
+        document.getElementById('stdoutContent').textContent : 
+        document.getElementById('stderrContent').textContent;
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `{{ job_execution.execution_id }}_${type}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const notification = $(`
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `);
+    
+    $('body').append(notification);
+    setTimeout(() => notification.remove(), 3000);
+}
+
+// Cleanup interval on page unload
+$(window).on('beforeunload', function() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+});
+</script>
+{% endblock %}

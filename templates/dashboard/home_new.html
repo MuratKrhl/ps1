@@ -1,0 +1,489 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - Portall{% endblock %}
+
+{% block extra_css %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.dashboard-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">
+                        <i class="ri-dashboard-line me-2"></i>Dashboard
+                    </h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item active">Ana Sayfa</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- A. Üst Sıra Özet Kartları -->
+        <div class="row">
+            <!-- 1. Toplam Uygulama -->
+            <div class="col-xl-3 col-md-6">
+                <div class="card dashboard-card" onclick="window.location.href='{% url 'envanter:application_list' %}'">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <p class="text-uppercase fw-medium text-muted mb-0">Toplam Uygulama</p>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
+                                        <i class="ri-apps-2-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-end justify-content-between mt-4">
+                            <div>
+                                <h4 class="fs-22 fw-semibold ff-secondary mb-2">
+                                    <span class="counter-value" data-target="{{ total_applications }}">{{ total_applications|default:0 }}</span>
+                                </h4>
+                                <span class="text-decoration-underline text-primary">Tüm Uygulamalar</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Aktif Uygulama -->
+            <div class="col-xl-3 col-md-6">
+                <div class="card dashboard-card" onclick="window.location.href='{% url 'envanter:application_list' %}?status=active'">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <p class="text-uppercase fw-medium text-muted mb-0">Aktif Uygulama</p>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                                        <i class="ri-checkbox-circle-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-end justify-content-between mt-4">
+                            <div>
+                                <h4 class="fs-22 fw-semibold ff-secondary mb-2">
+                                    <span class="counter-value" data-target="{{ active_applications }}">{{ active_applications|default:0 }}</span>
+                                </h4>
+                                <span class="text-decoration-underline text-success">Çalışan Uygulamalar</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Sorunlu Uygulama -->
+            <div class="col-xl-3 col-md-6">
+                <div class="card dashboard-card" onclick="window.location.href='{% url 'envanter:application_list' %}?status=error'">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <p class="text-uppercase fw-medium text-muted mb-0">Sorunlu Uygulama</p>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
+                                        <i class="ri-error-warning-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-end justify-content-between mt-4">
+                            <div>
+                                <h4 class="fs-22 fw-semibold ff-secondary mb-2 {% if error_applications > 0 %}text-danger{% endif %}">
+                                    <span class="counter-value" data-target="{{ error_applications }}">{{ error_applications|default:0 }}</span>
+                                </h4>
+                                <span class="text-decoration-underline {% if error_applications > 0 %}text-danger{% else %}text-muted{% endif %}">
+                                    {% if error_applications > 0 %}Dikkat Gerekli!{% else %}Sorun Yok{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Günün Nöbetçisi -->
+            <div class="col-xl-3 col-md-6">
+                <div class="card dashboard-card" onclick="window.location.href='{% url 'nobetci:duty_list' %}'">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <p class="text-uppercase fw-medium text-muted mb-0">Günün Nöbetçisi</p>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
+                                        <i class="ri-user-star-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            {% if todays_duty %}
+                                <h6 class="fs-16 fw-semibold mb-1">{{ todays_duty.user.get_full_name|default:todays_duty.user.username }}</h6>
+                                <p class="text-muted mb-1 small">{{ todays_duty.user.email|truncatechars:25 }}</p>
+                                <p class="text-muted mb-0 small">{{ todays_duty.phone|default:"Tel: -" }}</p>
+                            {% else %}
+                                <h6 class="fs-16 fw-semibold mb-1 text-muted">Atanmamış</h6>
+                                <p class="text-muted mb-0 small">Nöbet planı kontrol edilsin</p>
+                            {% endif %}
+                            <span class="text-decoration-underline text-warning small">Nöbet Listesi</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- B. Orta Sıra: Performans ve Envanter Grafikleri -->
+        <div class="row">
+            <!-- B. Sol: Performans Grafiği -->
+            <div class="col-xl-8">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="card-title mb-0">
+                            <i class="ri-line-chart-line me-2"></i>Performans Grafiği
+                        </h4>
+                        <div class="flex-shrink-0">
+                            <button type="button" class="btn btn-soft-primary btn-sm" onclick="window.location.href='{% url 'performans:dashboard' %}'">
+                                <i class="ri-external-link-line me-1"></i>Detaylar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                            <div id="performanceChartLoading" class="d-flex justify-content-center align-items-center" style="height: 300px;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Yükleniyor...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- B. Sağ: Envanter Sağlık Grafiği -->
+            <div class="col-xl-4">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="card-title mb-0">
+                            <i class="ri-pie-chart-line me-2"></i>Envanter Sağlığı
+                        </h4>
+                        <div class="flex-shrink-0">
+                            <button type="button" class="btn btn-soft-info btn-sm" onclick="window.location.href='{% url 'envanter:application_list' %}'">
+                                <i class="ri-external-link-line me-1"></i>Envanter
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="inventoryChart"></canvas>
+                            <div id="inventoryChartLoading" class="d-flex justify-content-center align-items-center" style="height: 300px;">
+                                <div class="spinner-border text-info" role="status">
+                                    <span class="visually-hidden">Yükleniyor...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Envanter Özet Tablosu -->
+                        <div class="table-responsive mt-3">
+                            <table class="table table-borderless table-sm table-centered mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <i class="ri-checkbox-circle-fill text-success me-2"></i>
+                                            <span class="fw-medium">Aktif</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-success-subtle text-success">{{ active_applications|default:0 }}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <i class="ri-tools-fill text-warning me-2"></i>
+                                            <span class="fw-medium">Bakımda</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-warning-subtle text-warning">{{ maintenance_applications|default:0 }}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <i class="ri-error-warning-fill text-danger me-2"></i>
+                                            <span class="fw-medium">Sorunlu</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-danger-subtle text-danger">{{ error_applications|default:0 }}</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- C. Alt Sıra: Son Duyurular ve AskGT Makaleleri -->
+        <div class="row">
+            <!-- C. Sol: Son Duyurular -->
+            <div class="col-xl-6">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="card-title mb-0">
+                            <i class="ri-notification-line me-2"></i>Son Duyurular
+                        </h4>
+                        <div class="flex-shrink-0">
+                            <a href="{% url 'duyurular:announcement_list' %}" class="btn btn-soft-info btn-sm">
+                                <i class="ri-external-link-line me-1"></i>Tümünü Gör
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
+                                <thead class="text-muted table-light">
+                                    <tr>
+                                        <th scope="col">Başlık</th>
+                                        <th scope="col">Kategori</th>
+                                        <th scope="col">Tarih</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for announcement in recent_announcements %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'duyurular:announcement_detail' announcement.id %}" class="fw-medium link-primary">
+                                                {{ announcement.title|truncatechars:40 }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary-subtle text-primary">
+                                                {{ announcement.category.name|default:"Genel" }}
+                                            </span>
+                                        </td>
+                                        <td>{{ announcement.created_at|date:"d.m.Y" }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted py-4">
+                                            <i class="ri-notification-off-line fs-1 text-muted mb-2"></i>
+                                            <p class="mb-0">Henüz duyuru bulunmuyor</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- C. Sağ: Son AskGT Makaleleri -->
+            <div class="col-xl-6">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="card-title mb-0">
+                            <i class="ri-article-line me-2"></i>Son AskGT Makaleleri
+                        </h4>
+                        <div class="flex-shrink-0">
+                            <a href="{% url 'askgt:article_list' %}" class="btn btn-soft-success btn-sm">
+                                <i class="ri-external-link-line me-1"></i>Tümünü Gör
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
+                                <thead class="text-muted table-light">
+                                    <tr>
+                                        <th scope="col">Başlık</th>
+                                        <th scope="col">Kategori</th>
+                                        <th scope="col">Tarih</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for article in recent_articles %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'askgt:article_detail' article.id %}" class="fw-medium link-primary">
+                                                {{ article.title|truncatechars:40 }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success-subtle text-success">
+                                                {{ article.category.name|default:"Genel" }}
+                                            </span>
+                                        </td>
+                                        <td>{{ article.created_at|date:"d.m.Y" }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted py-4">
+                                            <i class="ri-article-line fs-1 text-muted mb-2"></i>
+                                            <p class="mb-0">Henüz makale bulunmuyor</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Dashboard JavaScript for Charts and Interactions
+document.addEventListener('DOMContentLoaded', function() {
+    // Load Performance Chart
+    loadPerformanceChart();
+    
+    // Load Inventory Health Chart
+    loadInventoryChart();
+    
+    // Counter animation
+    animateCounters();
+});
+
+function loadPerformanceChart() {
+    fetch('{% url "dashboard:performance_chart_data" %}')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('performanceChartLoading').style.display = 'none';
+            
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Son 24 Saat Yanıt Süreleri (ms)'
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'hour',
+                                displayFormats: {
+                                    hour: 'HH:mm'
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Yanıt Süresi (ms)'
+                            }
+                        }
+                    },
+                    onClick: function(event, elements) {
+                        if (elements.length > 0) {
+                            window.location.href = '{% url "performans:dashboard" %}';
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Performance chart error:', error);
+            document.getElementById('performanceChartLoading').innerHTML = 
+                '<div class="text-center text-muted"><i class="ri-error-warning-line fs-1"></i><p>Grafik yüklenemedi</p></div>';
+        });
+}
+
+function loadInventoryChart() {
+    fetch('{% url "dashboard:inventory_health_data" %}')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('inventoryChartLoading').style.display = 'none';
+            
+            const ctx = document.getElementById('inventoryChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    onClick: function(event, elements) {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = data.labels[index].toLowerCase();
+                            window.location.href = `{% url "envanter:application_list" %}?status=${label}`;
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Inventory chart error:', error);
+            document.getElementById('inventoryChartLoading').innerHTML = 
+                '<div class="text-center text-muted"><i class="ri-error-warning-line fs-1"></i><p>Grafik yüklenemedi</p></div>';
+        });
+}
+
+function animateCounters() {
+    const counters = document.querySelectorAll('.counter-value');
+    counters.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-target'));
+        let current = 0;
+        const increment = target / 50;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                counter.textContent = target;
+                clearInterval(timer);
+            } else {
+                counter.textContent = Math.floor(current);
+            }
+        }, 20);
+    });
+}
+</script>
+{% endblock %}

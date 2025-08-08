@@ -1,0 +1,448 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Duyurular - Portall{% endblock %}
+
+{% block extra_css %}
+<style>
+.announcement-card {
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+.announcement-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.announcement-card.pinned {
+    border-left-color: #f59e0b;
+    background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%);
+}
+.announcement-card.important {
+    border-left-color: #ef4444;
+}
+.announcement-card.critical {
+    border-left-color: #dc2626;
+    background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.15);
+}
+.announcement-card.maintenance {
+    border-left-color: #8b5cf6;
+}
+.announcement-card.outage {
+    border-left-color: #dc2626;
+    background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+}
+.filter-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+.filter-card .form-control, .filter-card .form-select {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+}
+.filter-card .form-control::placeholder {
+    color: rgba(255,255,255,0.7);
+}
+.filter-card .form-control:focus, .filter-card .form-select:focus {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.4);
+    box-shadow: 0 0 0 0.2rem rgba(255,255,255,0.25);
+    color: white;
+}
+.filter-card .form-select option {
+    background: #6366f1;
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">Duyurular & Planlı Çalışmalar</h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Duyurular</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card filter-card">
+                    <div class="card-body">
+                        <form method="get" id="filterForm">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Arama</label>
+                                    <input type="text" class="form-control" name="search" 
+                                           value="{{ request.GET.search }}" 
+                                           placeholder="Başlık veya içerik ara...">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Kategori</label>
+                                    <select class="form-select" name="category">
+                                        <option value="">Tümü</option>
+                                        {% for category in categories %}
+                                        <option value="{{ category.id }}" 
+                                                {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ category.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Tür</label>
+                                    <select class="form-select" name="type">
+                                        <option value="">Tümü</option>
+                                        <option value="general" {% if request.GET.type == "general" %}selected{% endif %}>Genel</option>
+                                        <option value="planned_work" {% if request.GET.type == "planned_work" %}selected{% endif %}>Planlı Çalışma</option>
+                                        <option value="maintenance" {% if request.GET.type == "maintenance" %}selected{% endif %}>Bakım</option>
+                                        <option value="outage" {% if request.GET.type == "outage" %}selected{% endif %}>Kesinti</option>
+                                        <option value="update" {% if request.GET.type == "update" %}selected{% endif %}>Güncelleme</option>
+                                        <option value="info" {% if request.GET.type == "info" %}selected{% endif %}>Bilgilendirme</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Öncelik</label>
+                                    <select class="form-select" name="priority">
+                                        <option value="">Tümü</option>
+                                        <option value="low" {% if request.GET.priority == "low" %}selected{% endif %}>Düşük</option>
+                                        <option value="normal" {% if request.GET.priority == "normal" %}selected{% endif %}>Normal</option>
+                                        <option value="high" {% if request.GET.priority == "high" %}selected{% endif %}>Yüksek</option>
+                                        <option value="critical" {% if request.GET.priority == "critical" %}selected{% endif %}>Kritik</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Sıralama</label>
+                                    <select class="form-select" name="ordering">
+                                        <option value="-published_at" {% if request.GET.ordering == "-published_at" %}selected{% endif %}>En Yeni</option>
+                                        <option value="published_at" {% if request.GET.ordering == "published_at" %}selected{% endif %}>En Eski</option>
+                                        <option value="-view_count" {% if request.GET.ordering == "-view_count" %}selected{% endif %}>En Çok Görüntülenen</option>
+                                        <option value="title" {% if request.GET.ordering == "title" %}selected{% endif %}>Başlık (A-Z)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-1">
+                                    <label class="form-label">&nbsp;</label>
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-light">
+                                            <i class="ri-search-line"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Actions -->
+        {% if perms.duyurular.add_announcement %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#announcementModal">
+                            <i class="ri-add-line me-1"></i>Yeni Duyuru
+                        </button>
+                        <a href="{% url 'duyurular:announcement_list' %}?status=draft" class="btn btn-outline-secondary">
+                            <i class="ri-draft-line me-1"></i>Taslaklar
+                        </a>
+                        <a href="{% url 'duyurular:announcement_list' %}?status=archived" class="btn btn-outline-warning">
+                            <i class="ri-archive-line me-1"></i>Arşiv
+                        </a>
+                    </div>
+                    <div class="text-muted">
+                        Toplam {{ page_obj.paginator.count }} duyuru
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Announcements List -->
+        <div class="row">
+            {% for announcement in announcements %}
+            <div class="col-12 mb-4">
+                <div class="card announcement-card 
+                           {% if announcement.sabitle %}pinned{% endif %}
+                           {% if announcement.is_important %}important{% endif %}
+                           {% if announcement.duyuru_tipi == 'maintenance' %}maintenance{% endif %}
+                           {% if announcement.duyuru_tipi == 'outage' %}outage{% endif %}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if announcement.sabitle %}
+                                    <i class="ri-pushpin-fill text-warning me-2"></i>
+                                    {% endif %}
+                                    <h5 class="card-title mb-0">
+                                        <a href="{% url 'duyurular:announcement_detail' announcement.id %}" 
+                                           class="text-dark text-decoration-none">
+                                            {{ announcement.title }}
+                                        </a>
+                                    </h5>
+                                    {% if announcement.is_important %}
+                                    <span class="badge bg-danger-subtle text-danger ms-2">
+                                        <i class="ri-star-fill"></i> Önemli
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="d-flex flex-wrap gap-2 mb-2">
+                                    <span class="badge {{ announcement.get_type_badge_class }}">
+                                        {{ announcement.get_duyuru_tipi_display }}
+                                    </span>
+                                    <span class="badge {{ announcement.get_priority_badge_class }}">
+                                        {{ announcement.get_onem_seviyesi_display }}
+                                    </span>
+                                    {% if announcement.category %}
+                                    <span class="badge bg-secondary-subtle text-secondary">
+                                        {{ announcement.category.name }}
+                                    </span>
+                                    {% endif %}
+                                    {% if announcement.ilgili_urun %}
+                                    <span class="badge bg-info-subtle text-info">
+                                        <i class="ri-computer-line me-1"></i>{{ announcement.ilgili_urun }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <p class="card-text text-muted">
+                                    {{ announcement.content|striptags|truncatewords:30 }}
+                                </p>
+                                
+                                <div class="d-flex align-items-center text-muted small">
+                                    <i class="ri-calendar-line me-1"></i>
+                                    {{ announcement.published_at|date:"d.m.Y H:i" }}
+                                    <span class="mx-2">•</span>
+                                    <i class="ri-eye-line me-1"></i>
+                                    {{ announcement.view_count }} görüntülenme
+                                    {% if announcement.calisma_tarihi %}
+                                    <span class="mx-2">•</span>
+                                    <i class="ri-time-line me-1"></i>
+                                    Planlı: {{ announcement.calisma_tarihi|date:"d.m.Y H:i" }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Admin Actions -->
+                            {% if perms.duyurular.change_announcement %}
+                            <div class="dropdown">
+                                <button class="btn btn-ghost-secondary btn-sm" type="button" 
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="ri-more-2-fill"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="#" 
+                                           onclick="editAnnouncement({{ announcement.id|escapejs }})">
+                                            <i class="ri-edit-line me-2"></i>Düzenle
+                                        </a>
+                                    </li>
+                                    {% if announcement.status == 'draft' %}
+                                    <li>
+                                        <a class="dropdown-item text-success" href="#"
+                                           onclick="publishAnnouncement({{ announcement.id|escapejs }})">
+                                            <i class="ri-send-plane-line me-2"></i>Yayınla
+                                        </a>
+                                    </li>
+                                    {% elif announcement.status == 'published' %}
+                                    <li>
+                                        <a class="dropdown-item text-warning" href="#"
+                                           onclick="archiveAnnouncement({{ announcement.id|escapejs }})">
+                                            <i class="ri-archive-line me-2"></i>Arşivle
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="#"
+                                           onclick="deleteAnnouncement({{ announcement.id }})">
+                                            <i class="ri-delete-bin-line me-2"></i>Sil
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="ri-notification-off-line display-4 text-muted mb-3"></i>
+                        <h5 class="text-muted">Duyuru bulunamadı</h5>
+                        <p class="text-muted mb-0">Arama kriterlerinize uygun duyuru bulunmuyor.</p>
+                        {% if perms.duyurular.add_announcement %}
+                        <button type="button" class="btn btn-primary mt-3" 
+                                data-bs-toggle="modal" data-bs-target="#announcementModal">
+                            <i class="ri-add-line me-1"></i>İlk Duyuruyu Oluştur
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-center">
+                    <nav aria-label="Sayfa navigasyonu">
+                        <ul class="pagination">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
+                                    <i class="ri-arrow-left-line"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
+                                    <i class="ri-arrow-right-line"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Announcement Modal -->
+{% if perms.duyurular.add_announcement %}
+{% include 'duyurular/modals/announcement_modal.html' %}
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-submit form on filter change
+document.querySelectorAll('#filterForm select').forEach(select => {
+    select.addEventListener('change', function() {
+        document.getElementById('filterForm').submit();
+    });
+});
+
+// Admin functions
+{% if perms.duyurular.change_announcement %}
+function editAnnouncement(id) {
+    // Load announcement data and show modal
+    fetch(`/duyurular/api/announcement/${id}/`)
+        .then(response => response.json())
+        .then(data => {
+            // Populate modal form with data
+            populateAnnouncementModal(data);
+            new bootstrap.Modal(document.getElementById('announcementModal')).show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Duyuru yüklenirken hata oluştu', 'danger');
+        });
+}
+
+function publishAnnouncement(id) {
+    if (confirm('Bu duyuruyu yayınlamak istediğinizden emin misiniz?')) {
+        updateAnnouncementStatus(id, 'published');
+    }
+}
+
+function archiveAnnouncement(id) {
+    if (confirm('Bu duyuruyu arşivlemek istediğinizden emin misiniz?')) {
+        updateAnnouncementStatus(id, 'archived');
+    }
+}
+
+function deleteAnnouncement(id) {
+    if (confirm('Bu duyuruyu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+        fetch(`/duyurular/api/announcement/${id}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                showAlert('Duyuru silinirken hata oluştu', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Duyuru silinirken hata oluştu', 'danger');
+        });
+    }
+}
+
+function updateAnnouncementStatus(id, status) {
+    fetch(`/duyurular/api/announcement/${id}/status/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: status })
+    })
+    .then(response => {
+        if (response.ok) {
+            location.reload();
+        } else {
+            showAlert('Durum güncellenirken hata oluştu', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Durum güncellenirken hata oluştu', 'danger');
+    });
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.container-fluid').prepend(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+{% endif %}
+</script>
+{% endblock %}

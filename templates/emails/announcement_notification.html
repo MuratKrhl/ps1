@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yeni Duyuru - {{ announcement.title }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header .announcement-type {
+            margin: 10px 0 0 0;
+            padding: 5px 15px;
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .announcement-meta {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-left: 4px solid #007bff;
+        }
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .meta-row:last-child {
+            margin-bottom: 0;
+        }
+        .meta-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .meta-value {
+            color: #495057;
+            font-size: 14px;
+        }
+        .priority-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .priority-low { background-color: #d1ecf1; color: #0c5460; }
+        .priority-medium { background-color: #cce5ff; color: #004085; }
+        .priority-high { background-color: #fff3cd; color: #856404; }
+        .priority-critical { background-color: #f8d7da; color: #721c24; }
+        .announcement-content {
+            margin: 25px 0;
+            line-height: 1.8;
+            color: #495057;
+        }
+        .announcement-content h1,
+        .announcement-content h2,
+        .announcement-content h3 {
+            color: #343a40;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        .announcement-content p {
+            margin-bottom: 15px;
+        }
+        .announcement-content ul,
+        .announcement-content ol {
+            margin-bottom: 15px;
+            padding-left: 30px;
+        }
+        .announcement-content li {
+            margin-bottom: 8px;
+        }
+        .work-date-notice {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .work-date-notice h4 {
+            margin-top: 0;
+            color: #856404;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .work-date-notice .date {
+            font-weight: bold;
+            color: #856404;
+        }
+        .action-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 0 10px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 0;
+            }
+            .meta-row {
+                flex-direction: column;
+            }
+            .meta-label {
+                margin-bottom: 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📢 Yeni Duyuru</h1>
+            <div class="announcement-type">{{ announcement.get_duyuru_tipi_display }}</div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Announcement Title -->
+            <h2 style="color: #343a40; margin-top: 0;">{{ announcement.title }}</h2>
+
+            <!-- Meta Information -->
+            <div class="announcement-meta">
+                <div class="meta-row">
+                    <span class="meta-label">Kategori:</span>
+                    <span class="meta-value">{{ announcement.category.name }}</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">Önem Seviyesi:</span>
+                    <span class="meta-value">
+                        <span class="priority-badge priority-{{ announcement.onem_seviyesi }}">
+                            {{ announcement.get_onem_seviyesi_display }}
+                        </span>
+                    </span>
+                </div>
+                {% if announcement.ilgili_urun %}
+                <div class="meta-row">
+                    <span class="meta-label">İlgili Ürün/Sistem:</span>
+                    <span class="meta-value">{{ announcement.ilgili_urun }}</span>
+                </div>
+                {% endif %}
+                <div class="meta-row">
+                    <span class="meta-label">Yayın Tarihi:</span>
+                    <span class="meta-value">{{ announcement.published_at|date:"d.m.Y H:i" }}</span>
+                </div>
+                {% if announcement.yayin_bitis_tarihi %}
+                <div class="meta-row">
+                    <span class="meta-label">Geçerlilik Süresi:</span>
+                    <span class="meta-value">{{ announcement.yayin_bitis_tarihi|date:"d.m.Y H:i" }} tarihine kadar</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Work Date Notice -->
+            {% if announcement.calisma_tarihi %}
+            <div class="work-date-notice">
+                <h4>🗓️ Planlı Çalışma Tarihi</h4>
+                <p>Bu duyuru ile ilgili çalışma <span class="date">{{ announcement.calisma_tarihi|date:"d.m.Y H:i" }}</span> tarihinde gerçekleştirilecektir.</p>
+            </div>
+            {% endif %}
+
+            <!-- Summary -->
+            {% if announcement.summary %}
+            <div style="background-color: #e9ecef; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #6c757d;">
+                <strong>Özet:</strong> {{ announcement.summary }}
+            </div>
+            {% endif %}
+
+            <!-- Main Content -->
+            <div class="announcement-content">
+                {{ announcement.content|safe }}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="{{ site_url }}{{ announcement.get_absolute_url }}" class="btn btn-primary">
+                    Duyuruyu Görüntüle
+                </a>
+                <a href="{{ site_url }}/duyurular/" class="btn btn-secondary">
+                    Tüm Duyurular
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Bu e-posta <strong>Portall Duyuru Sistemi</strong> tarafından otomatik olarak gönderilmiştir.</p>
+            <p>
+                <a href="{{ site_url }}">Portall'a Git</a> | 
+                <a href="{{ site_url }}/duyurular/">Duyurular</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

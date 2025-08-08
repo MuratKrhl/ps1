@@ -1,0 +1,380 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Ansible Job Templates{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Ansible Job Templates</h6>
+                            <p class="text-sm mb-0">Ansible Tower/AWX Job Template'leri</p>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#syncModal">
+                                <i class="ri-refresh-line me-1"></i>Senkronize Et
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- İstatistik Kartları -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-uppercase font-weight-bold">Toplam Template</p>
+                                <h5 class="font-weight-bolder">{{ stats.total_templates }}</h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-primary shadow-primary text-center rounded-circle">
+                                <i class="ri-settings-3-line text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-uppercase font-weight-bold">Survey Aktif</p>
+                                <h5 class="font-weight-bolder">{{ stats.survey_enabled }}</h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-success shadow-success text-center rounded-circle">
+                                <i class="ri-questionnaire-line text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-uppercase font-weight-bold">Bu Hafta</p>
+                                <h5 class="font-weight-bolder">{{ stats.recent_executions }}</h5>
+                                <p class="mb-0">
+                                    <span class="text-success text-sm font-weight-bolder">Çalıştırma</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-info shadow-info text-center rounded-circle">
+                                <i class="ri-play-circle-line text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-uppercase font-weight-bold">Aktif</p>
+                                <h5 class="font-weight-bolder text-success">{{ job_templates|length }}</h5>
+                                <p class="mb-0">
+                                    <span class="text-success text-sm font-weight-bolder">Template</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-warning shadow-warning text-center rounded-circle">
+                                <i class="ri-check-line text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtreleme -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Filtreler</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="filterForm">
+                        <div class="row">
+                            <div class="col-md-3">
+                                {{ filter_form.search.label_tag }}
+                                {{ filter_form.search }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ filter_form.category.label_tag }}
+                                {{ filter_form.category }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ filter_form.status.label_tag }}
+                                {{ filter_form.status }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ filter_form.survey_enabled.label_tag }}
+                                {{ filter_form.survey_enabled }}
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary btn-sm me-2">
+                                    <i class="ri-search-line me-1"></i>Filtrele
+                                </button>
+                                <a href="{% url 'otomasyon:ansible_job_templates' %}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="ri-refresh-line me-1"></i>Temizle
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Templates Tablosu -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6>Job Templates</h6>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    {% if job_templates %}
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0" id="jobTemplatesTable">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Template</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Kategori</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Survey</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Kullanım</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Son Kullanım</th>
+                                    <th class="text-secondary opacity-7">İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for template in job_templates %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex px-2 py-1">
+                                            <div class="d-flex flex-column justify-content-center">
+                                                <h6 class="mb-0 text-sm">
+                                                    <a href="{% url 'otomasyon:ansible_job_template_detail' template.pk %}" class="text-decoration-none">
+                                                        {{ template.name }}
+                                                    </a>
+                                                </h6>
+                                                {% if template.description %}
+                                                <p class="text-xs text-secondary mb-0">{{ template.description|truncatechars:60 }}</p>
+                                                {% endif %}
+                                                <p class="text-xs text-secondary mb-0">
+                                                    <i class="ri-folder-line me-1"></i>{{ template.playbook|default:"N/A" }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if template.category %}
+                                        <span class="badge badge-sm" style="background-color: {{ template.category.color }}20; color: {{ template.category.color }};">
+                                            <i class="{{ template.category.icon }} me-1"></i>{{ template.category.name }}
+                                        </span>
+                                        {% else %}
+                                        <span class="badge badge-sm bg-secondary">Kategori Yok</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="align-middle text-center text-sm">
+                                        {% if template.survey_enabled %}
+                                        <span class="badge badge-sm bg-gradient-success">
+                                            <i class="ri-questionnaire-line me-1"></i>Aktif
+                                        </span>
+                                        {% else %}
+                                        <span class="badge badge-sm bg-gradient-secondary">Pasif</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        <span class="text-secondary text-xs font-weight-bold">{{ template.usage_count }}</span>
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        {% if template.last_used %}
+                                        <span class="text-secondary text-xs font-weight-bold">{{ template.last_used|date:"d.m.Y H:i" }}</span>
+                                        {% else %}
+                                        <span class="text-secondary text-xs">Hiç kullanılmadı</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="dropdown">
+                                            <button class="btn btn-link text-secondary mb-0" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="ri-more-2-fill"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a class="dropdown-item" href="{% url 'otomasyon:ansible_job_template_detail' template.pk %}">
+                                                        <i class="ri-eye-line me-2"></i>Detay
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item text-success" href="{% url 'otomasyon:ansible_job_template_detail' template.pk %}#launch">
+                                                        <i class="ri-play-circle-line me-2"></i>Çalıştır
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item" href="{% url 'otomasyon:ansible_job_executions' %}?search={{ template.name }}">
+                                                        <i class="ri-history-line me-2"></i>Geçmiş
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <div class="icon icon-shape icon-lg bg-gradient-primary shadow mx-auto">
+                            <i class="ri-settings-3-line opacity-10"></i>
+                        </div>
+                        <h6 class="mt-3">Henüz Job Template Yok</h6>
+                        <p class="text-sm text-secondary">Ansible Tower/AWX'den job template'leri senkronize edin.</p>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#syncModal">
+                            <i class="ri-refresh-line me-1"></i>Senkronize Et
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.survey_enabled %}&survey_enabled={{ request.GET.survey_enabled }}{% endif %}">İlk</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.survey_enabled %}&survey_enabled={{ request.GET.survey_enabled }}{% endif %}">Önceki</a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.survey_enabled %}&survey_enabled={{ request.GET.survey_enabled }}{% endif %}">Sonraki</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.survey_enabled %}&survey_enabled={{ request.GET.survey_enabled }}{% endif %}">Son</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Senkronizasyon Modal -->
+<div class="modal fade" id="syncModal" tabindex="-1" aria-labelledby="syncModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="syncModalLabel">Job Template Senkronizasyonu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="ri-information-line me-2"></i>
+                    Bu işlem Ansible Tower/AWX'den job template'leri ve survey parametrelerini çeker.
+                </div>
+                <p>Senkronizasyon işlemini başlatmak istediğinizden emin misiniz?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="startSync()">
+                    <i class="ri-refresh-line me-1"></i>Başlat
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // DataTables initialization
+    $('#jobTemplatesTable').DataTable({
+        "paging": false,
+        "searching": false,
+        "info": false,
+        "ordering": true,
+        "order": [[ 0, "asc" ]],
+        "columnDefs": [
+            { "orderable": false, "targets": [5] }
+        ],
+        "language": {
+            "emptyTable": "Veri bulunamadı",
+            "zeroRecords": "Eşleşen kayıt bulunamadı"
+        }
+    });
+    
+    // Auto-submit filter form on change
+    $('#filterForm select, #filterForm input').on('change keyup', function() {
+        if ($(this).attr('type') === 'text') {
+            clearTimeout(window.searchTimeout);
+            window.searchTimeout = setTimeout(function() {
+                $('#filterForm').submit();
+            }, 500);
+        } else {
+            $('#filterForm').submit();
+        }
+    });
+});
+
+function startSync() {
+    // Bu fonksiyon management command'i çalıştırmak için bir API endpoint'e istek gönderebilir
+    // Şimdilik basit bir alert gösterelim
+    alert('Senkronizasyon işlemi başlatıldı. Bu işlem birkaç dakika sürebilir.');
+    $('#syncModal').modal('hide');
+    
+    // Gerçek implementasyonda:
+    // $.post('/otomasyon/api/sync-templates/', function(data) {
+    //     if (data.success) {
+    //         location.reload();
+    //     } else {
+    //         alert('Senkronizasyon hatası: ' + data.error);
+    //     }
+    // });
+}
+</script>
+{% endblock %}

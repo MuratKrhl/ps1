@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>Giriş | Portall</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="Portall - Middleware Operations Portal" name="description" />
+    <meta content="Portall Team" name="author" />
+    
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="{% static 'assets/images/favicon.ico' %}">
+    
+    <!-- Bootstrap Css -->
+    <link href="{% static 'assets/css/bootstrap.min.css' %}" id="bootstrap-style" rel="stylesheet" type="text/css" />
+    <!-- Icons Css -->
+    <link href="{% static 'assets/css/icons.min.css' %}" rel="stylesheet" type="text/css" />
+    <!-- App Css-->
+    <link href="{% static 'assets/css/app.min.css' %}" id="app-style" rel="stylesheet" type="text/css" />
+    
+    <style>
+        .auth-body-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .wrapper-page {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .card {
+            max-width: 400px;
+            width: 100%;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        .auth-logo img {
+            max-height: 40px;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 1px solid #e0e6ed;
+            padding: 12px 15px;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-weight: 600;
+        }
+        .btn-info:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+        .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        .alert {
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body class="auth-body-bg">
+    <div class="wrapper-page">
+        <div class="container-fluid p-0">
+            <div class="card">
+                <div class="card-body p-4">
+                    <div class="text-center mt-2 mb-4">
+                        <div class="mb-3">
+                            <h3 class="text-primary font-weight-bold">PORTALL</h3>
+                            <p class="text-muted">Middleware Operations Portal</p>
+                        </div>
+                    </div>
+    
+                    <h4 class="text-center font-size-18 mb-4"><b>Giriş Yap</b></h4>
+    
+                    <div class="p-2">
+                        <form class="form-horizontal" method="post" action="{% url 'dashboard:login' %}">
+                            {% csrf_token %}
+                            
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                            
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger" role="alert">
+                                    {% for error in form.non_field_errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+    
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Kullanıcı Adı</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="mdi mdi-account"></i></span>
+                                    <input class="form-control" type="text" id="username" name="username" 
+                                           placeholder="Kullanıcı adınızı girin" required="" 
+                                           value="{{ form.username.value|default:'' }}">
+                                            <label class="form-check-label" for="auth-remember-check">Beni Hatırla</label>
+                                        </div>
+
+                                        <div class="mt-4">
+                                            <button class="btn btn-success w-100" type="submit">Giriş Yap</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <!-- end card body -->
+                        </div>
+                        <!-- end card -->
+
+                        <div class="mt-4 text-center">
+                            <p class="mb-0">Hesabınız yok mu? <a href="#" class="fw-semibold text-primary text-decoration-underline"> Kayıt Ol </a> </p>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- end row -->
+            </div>
+            <!-- end container -->
+        </div>
+        <!-- end auth page content -->
+
+        <!-- footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="text-center">
+                            <p class="mb-0 text-muted">&copy;
+                                <script>document.write(new Date().getFullYear())</script> Portall. Middleware Operations Portal
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <!-- end Footer -->
+    </div>
+    <!-- end auth-page-wrapper -->
+
+    <!-- JAVASCRIPT -->
+    <script src="{% load static %}{% static 'libs/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% load static %}{% static 'libs/simplebar/simplebar.min.js' %}"></script>
+    <script src="{% load static %}{% static 'libs/node-waves/waves.min.js' %}"></script>
+    <script src="{% load static %}{% static 'libs/feather-icons/feather.min.js' %}"></script>
+    <script src="{% load static %}{% static 'js/pages/plugins/lord-icon-2.1.0.js' %}"></script>
+    <script src="{% load static %}{% static 'js/plugins.js' %}"></script>
+
+    <!-- particles js -->
+    <script src="{% load static %}{% static 'libs/particles.js/particles.js' %}"></script>
+    <!-- particles app js -->
+    <script src="{% load static %}{% static 'js/pages/particles.app.js' %}"></script>
+    <!-- password-addon init -->
+    <script src="{% load static %}{% static 'js/pages/password-addon.init.js' %}"></script>
+</body>
+
+</html>

@@ -1,0 +1,236 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - AskGT{% endblock %}
+
+{% block extra_css %}
+<style>
+.stats-card {
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transition: transform 0.3s ease;
+}
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+.category-card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+.category-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+.document-item {
+    border-left: 3px solid #007bff;
+    background: #f8f9fa;
+    border-radius: 0 8px 8px 0;
+    transition: all 0.3s ease;
+}
+.document-item:hover {
+    background: #e9ecef;
+    border-left-color: #0056b3;
+}
+.popular-item {
+    border-left-color: #28a745;
+}
+.popular-item:hover {
+    border-left-color: #1e7e34;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">{{ page_title }}</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'askgt:home' %}">AskGT</a></li>
+                        <li class="breadcrumb-item active">Dokümanlar</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-white text-primary rounded fs-3">
+                                <i class="ri-file-text-line"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <p class="text-uppercase fw-semibold fs-12 mb-1">Toplam Doküman</p>
+                            <h4 class="mb-0">{{ total_documents }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-white text-primary rounded fs-3">
+                                <i class="ri-folder-line"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <p class="text-uppercase fw-semibold fs-12 mb-1">Kategori</p>
+                            <h4 class="mb-0">{{ total_categories }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-white text-primary rounded fs-3">
+                                <i class="ri-calendar-line"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <p class="text-uppercase fw-semibold fs-12 mb-1">Bu Hafta</p>
+                            <h4 class="mb-0">{{ recent_documents|length }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-white text-primary rounded fs-3">
+                                <i class="ri-eye-line"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <p class="text-uppercase fw-semibold fs-12 mb-1">Popüler</p>
+                            <h4 class="mb-0">{{ popular_documents|length }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Categories -->
+        <div class="col-xl-4">
+            <div class="card category-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-folder-line me-2"></i>Kategoriler
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for category in category_stats %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <a href="{% url 'askgt:document_list_by_category' category.kategori %}" 
+                               class="text-decoration-none">
+                                <h6 class="mb-1">{{ category.kategori }}</h6>
+                            </a>
+                        </div>
+                        <span class="badge bg-primary">{{ category.count }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">Henüz kategori bulunmuyor.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Documents -->
+        <div class="col-xl-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-time-line me-2"></i>Son Eklenenler
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for document in recent_documents|slice:":8" %}
+                    <div class="document-item p-3 mb-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    <a href="{{ document.get_absolute_url }}" 
+                                       class="text-decoration-none" target="_blank">
+                                        {{ document.baslik|truncatechars:50 }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">
+                                    {{ document.kategori }} • {{ document.eklenme_tarihi|date:"d M" }}
+                                </small>
+                            </div>
+                            <small class="text-muted ms-2">
+                                <i class="ri-eye-line"></i> {{ document.view_count }}
+                            </small>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">Henüz doküman bulunmuyor.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Popular Documents -->
+        <div class="col-xl-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-fire-line me-2"></i>En Popüler
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for document in popular_documents %}
+                    <div class="document-item popular-item p-3 mb-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    <a href="{{ document.get_absolute_url }}" 
+                                       class="text-decoration-none" target="_blank">
+                                        {{ document.baslik|truncatechars:50 }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">
+                                    {{ document.kategori }} • {{ document.eklenme_tarihi|date:"d M" }}
+                                </small>
+                            </div>
+                            <span class="badge bg-success">{{ document.view_count }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">Henüz popüler doküman bulunmuyor.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

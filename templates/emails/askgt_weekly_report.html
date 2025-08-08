@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskGT Haftalık Raporu</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #007bff;
+            margin: 0;
+            font-size: 28px;
+        }
+        .header p {
+            color: #6c757d;
+            margin: 10px 0 0 0;
+            font-size: 16px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            display: block;
+        }
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        .section {
+            margin: 30px 0;
+        }
+        .section h2 {
+            color: #495057;
+            border-left: 4px solid #007bff;
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+        .document-list {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .document-item {
+            background: white;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid #007bff;
+        }
+        .document-item:last-child {
+            margin-bottom: 0;
+        }
+        .document-title {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        .document-meta {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .category-name {
+            font-weight: 500;
+            color: #495057;
+        }
+        .category-count {
+            background: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .no-data {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 AskGT Haftalık Raporu</h1>
+            <p>{{ week_start }} - {{ week_end }}</p>
+        </div>
+
+        <!-- Genel İstatistikler -->
+        <div class="section">
+            <h2>📊 Genel İstatistikler</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number">{{ total_documents }}</span>
+                    <div class="stat-label">Toplam Doküman</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{{ total_categories }}</span>
+                    <div class="stat-label">Kategori</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{{ new_documents_count }}</span>
+                    <div class="stat-label">Bu Hafta Yeni</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{{ total_views }}</span>
+                    <div class="stat-label">Toplam Görüntülenme</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bu Hafta Eklenen Dokümanlar -->
+        <div class="section">
+            <h2>🆕 Bu Hafta Eklenen Dokümanlar</h2>
+            <div class="document-list">
+                {% for document in new_documents %}
+                <div class="document-item">
+                    <div class="document-title">{{ document.baslik }}</div>
+                    <div class="document-meta">
+                        {{ document.kategori }} • {{ document.eklenme_tarihi|date:"d.m.Y H:i" }}
+                        {% if document.view_count > 0 %} • {{ document.view_count }} görüntülenme{% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="no-data">Bu hafta yeni doküman eklenmedi.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- En Popüler Dokümanlar -->
+        <div class="section">
+            <h2>🔥 En Popüler Dokümanlar</h2>
+            <div class="document-list">
+                {% for document in popular_documents %}
+                <div class="document-item">
+                    <div class="document-title">{{ document.baslik }}</div>
+                    <div class="document-meta">
+                        {{ document.kategori }} • {{ document.view_count }} görüntülenme
+                    </div>
+                </div>
+                {% empty %}
+                <div class="no-data">Henüz popüler doküman bulunmuyor.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Kategori Dağılımı -->
+        <div class="section">
+            <h2>📁 Kategori Dağılımı</h2>
+            <div class="document-list">
+                {% for category in category_stats %}
+                <div class="category-item">
+                    <span class="category-name">{{ category.kategori }}</span>
+                    <span class="category-count">{{ category.count }}</span>
+                </div>
+                {% empty %}
+                <div class="no-data">Kategori bulunamadı.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Bu rapor otomatik olarak oluşturulmuştur.</p>
+            <p><strong>Portall AskGT Sistemi</strong> • {{ "now"|date:"d.m.Y H:i" }}</p>
+        </div>
+    </div>
+</body>
+</html>

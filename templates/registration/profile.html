@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Kullanıcı Profili{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- start page title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">Kullanıcı Profili</h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Profil</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end page title -->
+
+        <div class="row">
+            <div class="col-xl-4">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="text-center">
+                            <div class="profile-user position-relative d-inline-block mx-auto mb-4">
+                                <img src="{% static 'assets/images/users/avatar-1.jpg' %}" 
+                                     class="rounded-circle avatar-xl img-thumbnail user-profile-image" 
+                                     alt="user-profile-image">
+                                <div class="avatar-xs p-0 rounded-circle profile-photo-edit">
+                                    <input id="profile-img-file-input" type="file" class="profile-img-file-input">
+                                    <label for="profile-img-file-input" class="profile-photo-edit avatar-xs">
+                                        <span class="avatar-title rounded-circle bg-light text-body">
+                                            <i class="ri-camera-fill"></i>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                            <h5 class="fs-16 mb-1">{{ user.get_full_name|default:user.username }}</h5>
+                            <p class="text-muted mb-0">{{ user.email }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="flex-grow-1">
+                                <h5 class="card-title mb-0">Hesap Bilgileri</h5>
+                            </div>
+                        </div>
+                        <div class="mb-3 d-flex">
+                            <div class="avatar-xs d-block flex-shrink-0 me-3">
+                                <span class="avatar-title rounded-circle fs-16 bg-primary">
+                                    <i class="ri-user-line"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <label for="username" class="form-label">Kullanıcı Adı</label>
+                                <input type="text" class="form-control" id="username" value="{{ user.username }}" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 d-flex">
+                            <div class="avatar-xs d-block flex-shrink-0 me-3">
+                                <span class="avatar-title rounded-circle fs-16 bg-success">
+                                    <i class="ri-mail-line"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <label for="email" class="form-label">E-posta</label>
+                                <input type="email" class="form-control" id="email" value="{{ user.email }}" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 d-flex">
+                            <div class="avatar-xs d-block flex-shrink-0 me-3">
+                                <span class="avatar-title rounded-circle fs-16 bg-info">
+                                    <i class="ri-calendar-line"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <label for="date_joined" class="form-label">Kayıt Tarihi</label>
+                                <input type="text" class="form-control" id="date_joined" value="{{ user.date_joined|date:'d.m.Y H:i' }}" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 d-flex">
+                            <div class="avatar-xs d-block flex-shrink-0 me-3">
+                                <span class="avatar-title rounded-circle fs-16 bg-warning">
+                                    <i class="ri-time-line"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <label for="last_login" class="form-label">Son Giriş</label>
+                                <input type="text" class="form-control" id="last_login" value="{{ user.last_login|date:'d.m.Y H:i'|default:'Hiç giriş yapılmamış' }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-8">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center">
+                            <h5 class="card-title flex-grow-1 mb-0">Yetkilendirme Bilgileri</h5>
+                            {% if ldap_enabled %}
+                                <div class="flex-shrink-0">
+                                    <span class="badge bg-success">LDAP Aktif</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Durum</label>
+                                    <div class="d-flex align-items-center">
+                                        {% if user.is_active %}
+                                            <span class="badge bg-success me-2">Aktif</span>
+                                        {% else %}
+                                            <span class="badge bg-danger me-2">Pasif</span>
+                                        {% endif %}
+                                        {% if user.is_staff %}
+                                            <span class="badge bg-primary me-2">Personel</span>
+                                        {% endif %}
+                                        {% if user.is_superuser %}
+                                            <span class="badge bg-warning">Süper Kullanıcı</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Gruplar</label>
+                                    <div>
+                                        {% for group in user.groups.all %}
+                                            <span class="badge bg-info me-1 mb-1">{{ group.name }}</span>
+                                        {% empty %}
+                                            <span class="text-muted">Grup üyeliği yok</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if ldap_enabled %}
+                        <div class="alert alert-info" role="alert">
+                            <h6 class="alert-heading">LDAP Entegrasyonu</h6>
+                            <p class="mb-0">
+                                Hesabınız LDAP üzerinden yönetilmektedir. Şifre değişiklikleri ve profil güncellemeleri 
+                                için IT departmanı ile iletişime geçin.
+                            </p>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-4">
+                            <h6>Oturum Bilgileri</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Oturum Süresi:</strong></td>
+                                            <td>30 dakika (inaktivite sonrası)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Güvenlik:</strong></td>
+                                            <td>
+                                                <span class="badge bg-success">Brute-force Koruması</span>
+                                                <span class="badge bg-info">Session Güvenliği</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>IP Adresi:</strong></td>
+                                            <td>{{ request.META.REMOTE_ADDR }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Hızlı İşlemler</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <a href="{% url 'dashboard:home' %}" class="btn btn-primary w-100">
+                                    <i class="ri-dashboard-line me-1"></i> Dashboard'a Git
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="{% url 'authentication:logout' %}" class="btn btn-danger w-100">
+                                    <i class="ri-logout-box-line me-1"></i> Çıkış Yap
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="{% url 'authentication:health_check' %}" class="btn btn-info w-100">
+                                    <i class="ri-pulse-line me-1"></i> Sistem Durumu
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                {% if ldap_enabled %}
+                                    <button class="btn btn-secondary w-100" disabled>
+                                        <i class="ri-lock-line me-1"></i> Şifre Değiştir (LDAP)
+                                    </button>
+                                {% else %}
+                                    <a href="#" class="btn btn-warning w-100">
+                                        <i class="ri-lock-line me-1"></i> Şifre Değiştir
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
